@@ -1,0 +1,48 @@
+#+TITLE: ede-php-autoload
+
+* Description
+
+  This project simulates PHP autoloading system to use it in
+  Semantic. It is composed of 3 parts:
+
+  - An *EDE project*, =ede-php-autoload=, that defines autoloading
+    configuration for a project. It is able to parse =composer.json=
+    files to extract autoloading information from it
+  - A *SemanticDB backend* that can find a tag by name using the
+    autoload information of the current =ede-php-autoload= project
+  - A *minor mode*, =ede-php-autoload-mode=, that enables the
+    SemanticDB backend for a buffer.
+
+* Defining autoloads for a project
+
+  Let's assume we have a project located at =/home/me/my-project=. It
+  has 3 namespaces:
+
+  - =MyFirstNs=, located at =src/MyFirstNs=, and uses the PSR-0 norm
+  - =MySecondNs=, located at =src/MySecondNs=, and uses the PSR-4 norm
+  - =ThirdPartyNs=, located at =vendor/third-party/src=, and uses the PSR-4 norm
+
+  Defining this project and its autoload information is done like this:
+
+  #+BEGIN_SRC emacs-lisp
+    (ede-php-autoload-project "My project"
+                              :file "/home/me/my-project/main.php"
+                              :class-autoloads '(:psr-0 (("MyFirstNs" . "src/MyFirstNs"))
+                                                 :psr-4 (("MySecondNs" . "src/MySecondNs")
+                                                         ("ThirdPartyNs" . "vendor/third-party/src"))))
+  #+END_SRC
+
+  If you have a =composer.json= configured with your autoloads at the
+  root of your project, you can totally omit the =:class-autoloads=
+  key. All autoloads in your =composer.json= and your dependencies
+  ones will be parsed.
+
+* Enabling the SemanticDB backend in php buffers
+
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'php-mode-hook #'ede-php-autoload-mode)
+  #+END_SRC
+
+* License
+
+  This project is released under the GPL v3 license. See =GPL= for details.
