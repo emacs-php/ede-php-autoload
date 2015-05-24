@@ -31,6 +31,7 @@
 ;;; Code:
 
 (require 'semantic/db)
+(require 'semantic/db-typecache)
 (require 'ede-php-autoload)
 
 (eval-and-compile
