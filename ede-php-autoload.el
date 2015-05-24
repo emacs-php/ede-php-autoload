@@ -5,6 +5,7 @@
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;;         original code for C++ by Eric M. Ludlam <eric@siege-engine.com>
 ;; Keywords: PHP project ede
+;; Homepage: https://github.com/stevenremot/ede-php-autoload
 
 ;; This file is not part of GNU Emacs.
 
