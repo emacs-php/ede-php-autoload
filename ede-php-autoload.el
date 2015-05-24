@@ -34,6 +34,9 @@
 ;;                                                 ("AnotherNs" . "src/AnotherNs"))
 ;;                                          :psr-4 (("MyModernNs" . "src/modern/MyNs"))))
 ;;
+;; This EDE project can then be used through a semanticdb
+;; backend. Enable it by activating `ede-php-autoload-mode'.
+;;
 (require 'ede)
 (require 'json)
 

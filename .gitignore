@@ -1,2 +1,5 @@
 *~
 *.elc
+.cask
+dist
+ede-php-autoload-pkg.el
