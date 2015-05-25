@@ -1,7 +1,8 @@
 {
     "autoload": {
         "psr-0": {
-            "Psr0Ns": "src/"
+            "Psr0Ns": "src/",
+            "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"]
         },
         "psr-4": {
             "Psr4Ns": "src/Psr4Ns"

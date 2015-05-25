@@ -45,6 +45,18 @@
   :file-name "src/Psr4Ns/TheClass.php"
   :project "without-composer")
 
+(define-class-definition-test ede-php-autoload-wt-composer-find-multidir-1 ()
+  "The definition of the first item of a multi-directory namespace should be found."
+  :class "MultiDirNs\\TheClass1"
+  :file-name "src/MultiDirNs1/TheClass1.php"
+  :project "without-composer")
+
+(define-class-definition-test ede-php-autoload-wt-composer-find-multidir-2 ()
+  "The definition of the non-first item of a multi-directory namespace should be found."
+  :class "MultiDirNs\\TheClass2"
+  :file-name "src/MultiDirNs2/TheClass2.php"
+  :project "without-composer")
+
 (define-class-definition-test ede-php-autoload-wt-composer-find-nothing ()
   "nil should be returned when no definition have been found."
   :class "Psr4Ns\\DoesNotExist"
@@ -67,6 +79,18 @@
   "The definition for a PSR-4 class should be found."
   :class "Psr4Ns\\TheClass"
   :file-name "src/Psr4Ns/TheClass.php"
+  :project "with-composer")
+
+(define-class-definition-test ede-php-autoload-composer-find-multidir-1 ()
+  "The definition of the first item of a multi-directory namespace should be found."
+  :class "MultiDirNs\\TheClass1"
+  :file-name "src/MultiDirNs1/TheClass1.php"
+  :project "with-composer")
+
+(define-class-definition-test ede-php-autoload-composer-find-multidir-2 ()
+  "The definition of the non-first item of a multi-directory namespace should be found."
+  :class "MultiDirNs\\TheClass2"
+  :file-name "src/MultiDirNs2/TheClass2.php"
   :project "with-composer")
 
 (define-class-definition-test ede-php-autoload-composer-find-nothing ()

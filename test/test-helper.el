@@ -48,7 +48,8 @@
                           :file (concat test-helper--projects-root
                                         "without-composer/main.php")
                           :class-autoloads '(:psr-0 (("Psr0Ns" . "src/Psr0Ns"))
-                                             :psr-4 (("Psr4Ns" . "src/Psr4Ns"))))
+                                             :psr-4 (("Psr4Ns" . "src/Psr4Ns")
+                                                     ("MultiDirNs" . ("src/MultiDirNs1" "src/MultiDirNs2")))))
 
 (ede-php-autoload-project "With composer"
                           :file (concat test-helper--projects-root

@@ -47,8 +47,8 @@
   "List of projects created by otpion `ede-php-autoload-project'.")
 
 (defun ede-php-autoload-file-existing (dir)
-  "Find a php-root project in the list of php-root projects.
-DIR is the drectory to search from."
+  "Find a php-autoload project in the list of php-autoload projects.
+DIR is the directory to search from."
   (let ((projs ede-php-autoload-project-list)
         (ans nil))
     (while (and projs (not ans))
@@ -80,8 +80,8 @@ ROOTPROJ is nil, since there is only one project."
 
 ;;;###autoload
 (ede-add-project-autoload
- (ede-project-autoload "php-root"
-                       :name "PHP ROOT"
+ (ede-project-autoload "php-autoload"
+                       :name "PHP AUTOLOAD"
                        :file 'ede-php-autoload
                        :proj-file 'ede-php-autoload-project-file-for-dir
                        :proj-root 'ede-php-autoload-project-root
@@ -91,6 +91,7 @@ ROOTPROJ is nil, since there is only one project."
                        :safe-p t)
  'unique)
 
+
 ;;;;
 ;;;; Class loaders
 ;;;;
@@ -99,6 +100,38 @@ ROOTPROJ is nil, since there is only one project."
 ;;;;
 ;;;; For example, with PSR-4 convention, to find the class \Bar\Foo
 ;;;; one have to search each include path to find the file Bar/Foo.php.
+
+;; Helper functions
+
+(defun ede-php-autoload--ensure-list (list-or-element)
+  "Ensure LIST-OR-ELEMENT will be wrapped in a list."
+  (if (listp list-or-element) list-or-element (list list-or-element)))
+
+(defun ede-php-autoload--search-in-dirs (file directories root)
+  "Search for a FILE existing in one of the given DIRECTORIES.
+
+DIRECTORIES are absolute paths or relative to ROOT."
+  (let ((dirs (ede-php-autoload--ensure-list directories))
+        existing-file
+        candidate
+        current-dir
+        absolute-dir)
+    (while (and (not existing-file) dirs)
+      (setq current-dir (car dirs)
+
+            absolute-dir (if (file-name-absolute-p current-dir)
+                             current-dir
+                           (expand-file-name current-dir root))
+
+            candidate (expand-file-name file absolute-dir)
+            dirs (cdr dirs))
+
+      (when (file-regular-p candidate)
+        (setq existing-file candidate)))
+
+    existing-file))
+
+;; Autoloaders
 
 (defclass ede-php-autoload-class-loader ()
   ()
@@ -134,17 +167,11 @@ Return nil if no file has been found."
          (namespaces (oref this namespaces))
          class-def-file)
     (while (and namespaces (not class-def-file))
-      (let ((pair (car namespaces))
-            (candidate-file ""))
+      (let ((pair (car namespaces)))
         (when (string= (car namelist) (car pair))
-          (setq candidate-file
-                (expand-file-name relative-path
-                                  (if (file-name-absolute-p (cdr pair))
-                                      (cdr pair)
-                                    (expand-file-name (cdr pair)
-                                                      project-root))))
-          (when (file-regular-p candidate-file)
-            (setq class-def-file candidate-file)))
+          (setq class-def-file (ede-php-autoload--search-in-dirs relative-path
+                                                                 (cdr pair)
+                                                                 project-root)))
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
@@ -156,7 +183,9 @@ Return nil if no file has been found."
                   "An associative list in which keys are namespaces, and  values are their include paths.
 
 For example, if :namespaces has the value '((\"Foo\" . \"src/Foo\") (\"Bar\" . \"src/test/Bar\")),
-then The class \"Bar_Foo\" is considered to be defined in \"src/test/Bar/Foo\"."))
+then The class \"Bar_Foo\" is considered to be defined in \"src/test/Bar/Foo\".
+
+The include paths can be either a string or a list of strings."))
   "Class loader for PSR-0 convention.")
 
 (defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-psr0-class-loader)
@@ -174,14 +203,9 @@ Return nil if no file has been found."
       (let ((pair (car namespaces))
             (candidate-file ""))
         (when (string= (car namelist) (car pair))
-          (setq candidate-file
-                (expand-file-name relative-path
-                                  (if (file-name-absolute-p (cdr pair))
-                                      (cdr pair)
-                                    (expand-file-name (cdr pair)
-                                                      project-root))))
-          (when (file-regular-p candidate-file)
-            (setq class-def-file candidate-file)))
+          (setq class-def-file (ede-php-autoload--search-in-dirs relative-path
+                                                                 (cdr pair)
+                                                                 project-root)))
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
@@ -231,6 +255,50 @@ to the associated directories."
                                          :class-loaders loaders)))
 
 ;;; Composer support
+(defun ede-php-autoload--format-composer-single-dir (namespace path base-dir standard)
+  "Format a composer autoload pair when the path is a single string.
+
+NAMESPACE is the autoloaded namespace.
+
+PATH is a string representing the relative directory.
+
+BASE-DIR is the directory PATH is relative to.
+
+STANDARD is the autoload standard (e.g. `psr-0')."
+
+    (when (stringp base-dir)
+      (setq path (concat (file-name-as-directory base-dir) path)))
+
+    (when (string= "psr-0" standard)
+      (setq path (concat path namespace "/")))
+
+    (cons namespace path))
+
+(defun ede-php-autoload--format-composer-multiple-dirs
+    (namespace paths base-dir standard)
+  "Format a composer autoload pair when the path is a single string.
+
+NAMESPACE is the autoloaded namespace.
+
+PATHS is a vector of strings representing the relative directories.
+
+BASE-DIR is the directory PATHS are relative to.
+
+STANDARD is the autoload standard (e.g. `psr-0')."
+  (let  ((list-paths (append paths '())))
+
+    (when (stringp base-dir)
+      (mapc #'(lambda (path)
+                (concat (file-name-as-directory base-dir) path))
+            list-paths))
+
+    (when (string= "psr-0" standard)
+      (mapc #'(lambda (path)
+                (concat path namespace "/"))
+            list-paths))
+
+    (cons namespace list-paths)))
+
 (defun ede-php-autoload--format-composer-pair (pair base-dir standard)
   "Format composer autoload pair to `ede-php-autoload' format.
 
@@ -252,13 +320,9 @@ STANDARD is either \"psr-0\" or \"psr-4\".  If STANDARD is
     (when (member last-character '(?\\ ?_))
       (setq namespace (substring-no-properties namespace 0 (1- (length namespace)))))
 
-    (when (stringp base-dir)
-      (setq path (concat (file-name-as-directory base-dir) path)))
-
-    (when (string= "psr-0" standard)
-      (setq path (concat path namespace "/")))
-
-    (cons namespace path)))
+    (if (stringp path)
+        (ede-php-autoload--format-composer-single-dir namespace path base-dir standard)
+      (ede-php-autoload--format-composer-multiple-dirs namespace path base-dir standard))))
 
 (defun ede-php-autoload--merge-composer-autoloads (composer-data autoloads &optional base-dir)
   "Load the autoload information in COMPOSER-DATA and merge it with AUTOLOADS.
@@ -271,10 +335,13 @@ BASE-DIR is the prefix dir to add to each autoload path."
     (dolist (autoload-part composer-autoloads)
       (when (member (car autoload-part) '(psr-0 psr-4))
         (setq key (intern (concat ":" (symbol-name (car autoload-part))))
+
               spec (mapcar #'(lambda (pair)
                                (ede-php-autoload--format-composer-pair pair base-dir (car autoload-part)))
                            (cdr autoload-part))
+
               base-spec (plist-get autoloads key))
+
         (setq autoloads (plist-put autoloads key (append base-spec spec)))))
     autoloads))
 
@@ -318,7 +385,7 @@ information into AUTOLOADS."
 (defclass ede-php-autoload-target (ede-target)
   ((project :initform nil
             :initarg :project))
-  "EDE php-root project target.")
+  "EDE php-autoload project target.")
 
 ;;;###autoload
 (defclass ede-php-autoload-project (ede-project eieio-instance-tracker)
