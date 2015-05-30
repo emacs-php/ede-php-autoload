@@ -1,5 +1,4 @@
 #+TITLE: ede-php-autoload TODO List
 
-- Autodetect project with a =composer.json= file
 - Write more ERT tests
 - Detect more project types
