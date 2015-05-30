@@ -32,10 +32,14 @@
                                                          ("ThirdPartyNs" . "vendor/third-party/src"))))
   #+END_SRC
 
-  If you have a =composer.json= configured with your autoloads at the
-  root of your project, you can totally omit the =:class-autoloads=
-  key. All autoloads in your =composer.json= and your dependencies
-  ones will be parsed.
+  If you have a =composer.json= at the root of your project, its
+  autoload information (and also the one in the composer dependencies)
+  will be merged with the information you put in =:class-autoloads=.
+
+  If your =composer.json= contains all the autoload information, and
+  you have nothing to add in =:class-autoloads=, you don't have to
+  define an EDE project by hand. It will be automatically created when
+  you visit a file in your project.
 
 * Enabling the SemanticDB backend in php buffers
 
