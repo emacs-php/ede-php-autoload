@@ -27,6 +27,8 @@
 (require 'cl-lib)
 ;;; Code:
 
+(global-ede-mode 1)
+
 ;; Define directory variables
 (defconst test-helper--test-root (file-name-directory
                                   (or load-file-name (buffer-file-name))))
@@ -43,17 +45,14 @@
         "ede-php-autoload-semanticdb"
         "ede-php-autoload-mode"))
 
-;; Define project
+;; Define projects
+;; The composer projet is auto-detected
 (ede-php-autoload-project "Without composer"
                           :file (concat test-helper--projects-root
                                         "without-composer/main.php")
                           :class-autoloads '(:psr-0 (("Psr0Ns" . "src/Psr0Ns"))
                                              :psr-4 (("Psr4Ns" . "src/Psr4Ns")
                                                      ("MultiDirNs" . ("src/MultiDirNs1" "src/MultiDirNs2")))))
-
-(ede-php-autoload-project "With composer"
-                          :file (concat test-helper--projects-root
-                                        "with-composer/composer.json"))
 
 ;; Define function helpers
 (defun test-helper-get-project-file-path (file project)

@@ -44,7 +44,11 @@
 ;;; Code:
 
 (defvar ede-php-autoload-project-list nil
-  "List of projects created by otpion `ede-php-autoload-project'.")
+  "List of projects created by option `ede-php-autoload-project'.")
+
+;;;###autoload
+(defconst ede-php-autoload-composer-file "composer.json"
+  "File name for composer configuration.")
 
 (defun ede-php-autoload-file-existing (dir)
   "Find a php-autoload project in the list of php-autoload projects.
@@ -58,11 +62,6 @@ DIR is the directory to search from."
       (setq projs (cdr projs)))
     ans))
 
-(defun ede-php-autoload-project-file-for-dir (&optional dir)
-  "Return a full file name to the project file stored in DIR."
-  (let ((proj (ede-php-autoload-file-existing dir)))
-    (when proj (oref proj :file))))
-
 ;;;###autoload
 (defun ede-php-autoload-project-root (&optional dir)
   "Get the root directory for DIR."
@@ -71,21 +70,28 @@ DIR is the directory to search from."
     (when projfile
       (file-name-directory projfile))))
 
+;;;###autoload
 (defun ede-php-autoload-load (dir &optional rootproj)
-  "Return a PHP root object if you created one.
-Return nil if there isn't one.
-DIR is the directory it is created for.
-ROOTPROJ is nil, since there is only one project."
-  (ede-php-autoload-file-existing dir))
+  "Return a `ede-php-autoload-project' for the provided directory.
 
+DIR is the project directory.
+
+ROOTPROJ is the parent project.  The PHP autoload project is not
+intended to be a subproject, so this argument is ignored."
+  (let* ((truedir (file-truename dir))
+         (name (concat "PHP Autoload: " truedir)))
+    (ede-php-autoload-project name
+                              :name name
+                              :directory truedir
+                              :file (expand-file-name ede-php-autoload-composer-file
+                                                      truedir))))
 ;;;###autoload
 (ede-add-project-autoload
  (ede-project-autoload "php-autoload"
                        :name "PHP AUTOLOAD"
                        :file 'ede-php-autoload
-                       :proj-file 'ede-php-autoload-project-file-for-dir
-                       :proj-root 'ede-php-autoload-project-root
-                       :load-type 'ede-php-autoload-load
+                       :proj-file ede-php-autoload-composer-file
+                       :load-type #'ede-php-autoload-load
                        :class-sym 'ede-php-autoload-project
                        :new-p nil
                        :safe-p t)
@@ -349,7 +355,7 @@ BASE-DIR is the prefix dir to add to each autoload path."
   "Return the parsed composer.json file in DIR if any.
 
 Return nil otherwise."
-  (let ((composer-file (expand-file-name "composer.json" dir)))
+  (let ((composer-file (expand-file-name ede-php-autoload-composer-file dir)))
     (when (file-exists-p composer-file)
       (json-read-file composer-file))))
 
