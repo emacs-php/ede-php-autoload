@@ -168,16 +168,22 @@ then The class \"Bar\\Foo\" is considered to be defined in \"src/test/Bar/Foo\".
 
 Return nil if no file has been found."
   (let* ((namelist (split-string class-name (regexp-quote "\\") t))
-         (relative-path (concat (mapconcat 'identity (cdr namelist) "/") ".php"))
          (project-root (ede-project-root-directory (ede-current-project)))
          (namespaces (oref this namespaces))
          class-def-file)
+
     (while (and namespaces (not class-def-file))
-      (let ((pair (car namespaces)))
-        (when (string= (car namelist) (car pair))
+      (let* ((prefixlist (split-string (car (car namespaces)) (regexp-quote "\\") t))
+             (common-prefix (mapcar* 'string= prefixlist namelist))
+             (prefix-matches-name (reduce (lambda (x y) (and x y)) common-prefix))
+             (local-class-name (nthcdr (length common-prefix) namelist))
+             (relative-path (concat (mapconcat 'identity local-class-name "/") ".php")))
+
+        (when prefix-matches-name
           (setq class-def-file (ede-php-autoload--search-in-dirs relative-path
-                                                                 (cdr pair)
+                                                                 (cdr (car namespaces))
                                                                  project-root)))
+
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
