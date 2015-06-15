@@ -105,6 +105,12 @@
   :file-name "vendor/third-party/third-party/src/ThirdClass.php"
   :project "with-composer")
 
+(define-class-definition-test ede-php-autoload-composer-find-with-target-dir ()
+  "The definition for a composer dependency with a target dir should be found."
+  :class "TargetDir\\Component\\TheClass"
+  :file-name "vendor/target-dir/target-dir/TargetDir/Component/TheClass.php"
+  :project "with-composer")
+
 (provide 'ede-php-autoload-test)
 
 ;;; ede-php-autoload-test.el ends here

@@ -1,0 +1,8 @@
+{
+    "autoload": {
+        "psr-0": {
+            "TargetDir\\Component\\": ""
+        }
+    },
+    "target-dir": "TargetDir/Component"
+}
