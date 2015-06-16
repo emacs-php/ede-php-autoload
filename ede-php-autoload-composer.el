@@ -53,7 +53,7 @@ STANDARD is the autoload standard (e.g. `psr-0')."
       (setq path (concat (file-name-as-directory base-dir) path)))
 
     (when (string= "psr-0" standard)
-      (setq path (concat path namespace "/")))
+      (setq path (concat path (replace-regexp-in-string (rx "\\") "/"  namespace) "/")))
 
     (cons namespace path))
 
@@ -146,6 +146,15 @@ PROJECT-DIR is the root directory."
         (cdr (assoc 'packages lock-file-data))
       [])))
 
+(defun ede-php-autoload-composer--get-third-party-dir (package-data vendor-dir)
+  "Return the directory that contain third party sources.
+
+PACKAGE-DATA is the data for the corresponding third-party in the
+composer.lock file.
+
+VENDOR-DIR is the project's vendor directory."
+  (expand-file-name (cdr (assoc 'name package-data)) vendor-dir))
+
 (defun ede-php-autoload-composer--merge-lock-file-data (project-dir autoloads)
   "Merge the lock file content in the autoloads.
 
@@ -162,7 +171,7 @@ AUTOLOADS is the current autoload configuration ot merge with."
             autoloads (ede-php-autoload--merge-composer-autoloads
                        current-data
                        autoloads
-                       (expand-file-name (cdr (assoc 'name current-data)) vendor-dir))
+                       (ede-php-autoload-composer--get-third-party-dir current-data vendor-dir))
             i (1+ i)))
     autoloads))
 

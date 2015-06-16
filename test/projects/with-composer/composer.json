@@ -1,14 +1,15 @@
 {
     "autoload": {
         "psr-0": {
-            "Psr0Ns": "src/",
-            "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"]
+            "Psr0Ns": "src/"
         },
         "psr-4": {
-            "Psr4Ns": "src/Psr4Ns"
+            "Psr4Ns": "src/Psr4Ns",
+            "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"]
         }
     },
     "require": {
-        "third-party/third-party": "*"
+        "third-party/third-party": "*",
+        "target-dir/target-dir": "*"
     }
 }

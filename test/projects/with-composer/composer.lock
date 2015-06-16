@@ -10,11 +10,11 @@
         },
         {
             "name": "target-dir/target-dir",
-                "autoload": {
-                    "psr-0": {
-                        "TargetDir\\Component\\": ""
-                    }
-                },
+            "autoload": {
+                "psr-0": {
+                    "TargetDir\\Component\\": ""
+                }
+            },
             "target-dir": "TargetDir/Component"
         }
     ]

@@ -149,6 +149,20 @@ DIRECTORIES are absolute paths or relative to ROOT."
 CLASS-NAME must be the full name of the class, with all its parent namespaces."
   (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
+(defun ede-php-autoload--get-path-relative-to-ns (class-name namespace)
+  "Return the path of the class file relative to the namespace directory.
+
+CLASS-NAME is the class name.
+
+NAMESPACE is the namespace to map."
+  (concat
+   (mapconcat
+    'identity
+    (nthcdr (length (split-string namespace (rx (or "\\" "_")) t))
+            (split-string class-name (rx (or "\\" "_")) t))
+    "/")
+   ".php"))
+
 ;;;###autoload
 (defclass ede-php-autoload-psr4-class-loader (ede-php-autoload-class-loader)
   ((namespaces :initarg :namespaces
@@ -165,17 +179,16 @@ then The class \"Bar\\Foo\" is considered to be defined in \"src/test/Bar/Foo\".
   "Find the file in which CLASS-NAME is defined.
 
 Return nil if no file has been found."
-  (let* ((namelist (split-string class-name (regexp-quote "\\") t))
-         (relative-path (concat (mapconcat 'identity (cdr namelist) "/") ".php"))
-         (project-root (ede-project-root-directory (ede-current-project)))
+  (let* ((project-root (ede-project-root-directory (ede-current-project)))
          (namespaces (oref this namespaces))
          class-def-file)
     (while (and namespaces (not class-def-file))
       (let ((pair (car namespaces)))
-        (when (string= (car namelist) (car pair))
-          (setq class-def-file (ede-php-autoload--search-in-dirs relative-path
-                                                                 (cdr pair)
-                                                                 project-root)))
+        (when (string-prefix-p (car pair) class-name)
+          (setq class-def-file (ede-php-autoload--search-in-dirs
+                                (ede-php-autoload--get-path-relative-to-ns class-name (car pair))
+                                (cdr pair)
+                                project-root)))
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
@@ -198,18 +211,17 @@ The include paths can be either a string or a list of strings."))
 
 Return nil if no file has been found."
   (let* ((class-name (if (= (aref class-name 0) ?\\) (substring class-name 1) class-name))
-         (namelist (split-string class-name (rx (or "\\" "_")) t))
-         (relative-path (concat (mapconcat 'identity (cdr namelist) "/") ".php"))
          (project-root (ede-project-root-directory (ede-current-project)))
          (namespaces (oref this namespaces))
          class-def-file)
     (while (and namespaces (not class-def-file))
       (let ((pair (car namespaces))
             (candidate-file ""))
-        (when (string= (car namelist) (car pair))
-          (setq class-def-file (ede-php-autoload--search-in-dirs relative-path
-                                                                 (cdr pair)
-                                                                 project-root)))
+        (when (string-prefix-p (car pair) class-name)
+          (setq class-def-file (ede-php-autoload--search-in-dirs
+                                (ede-php-autoload--get-path-relative-to-ns class-name (car pair))
+                                (cdr pair)
+                                project-root)))
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
