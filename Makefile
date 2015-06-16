@@ -1,9 +1,15 @@
 CASK=cask
 
-.PHONY: test elc package clean
+.PHONY: test test-simple elc package clean
+
+test-simple:
+	$(CASK) exec ert-runner
 
 test:
-	$(CASK) exec ert-runner
+	$(MAKE) clean
+	$(MAKE) test-simple
+	$(MAKE) elc
+	$(MAKE) test-simple
 
 elc:
 	$(CASK) build
