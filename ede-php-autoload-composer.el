@@ -35,6 +35,9 @@
 (defconst ede-php-autoload-composer-file "composer.json"
   "File name for composer configuration.")
 
+(defconst ede-php-autoload-composer-lock-file "composer.lock"
+  "File name for the composer dependecies lock file.")
+
 (defun ede-php-autoload--format-composer-single-dir (namespace path base-dir standard)
   "Format a composer autoload pair when the path is a single string.
 
@@ -125,7 +128,7 @@ BASE-DIR is the prefix dir to add to each autoload path."
         (setq autoloads (plist-put autoloads key (append base-spec spec)))))
     autoloads))
 
-(defun ede-php-autoload--get-composer-data (dir)
+(defun ede-php-autoload-composer--get-data (dir)
   "Return the parsed composer.json file in DIR if any.
 
 Return nil otherwise."
@@ -133,34 +136,45 @@ Return nil otherwise."
     (when (file-exists-p composer-file)
       (json-read-file composer-file))))
 
-(defun ede-php-autoload--get-composer-third-party-dirs (composer-data)
-  "Get all composer project's third party lib dirs.
+(defun ede-php-autoload-composer--get-third-party-data (project-dir)
+  "Return the composer packages in composer.lock file.
 
-COMPOSER-DATA is the composer.json data to scan."
-  (let ((vendor-dir (file-name-as-directory
-                     (or (assoc-default 'vendor-dir composer-data) "vendor")))
-        (third-parties (assoc-default 'require composer-data '()))
-        (dirs '()))
-    (dolist (third-party third-parties)
-      (push (concat vendor-dir (symbol-name (car third-party))) dirs))
-    dirs))
+PROJECT-DIR is the root directory."
+  (let* ((lock-file (expand-file-name ede-php-autoload-composer-lock-file project-dir))
+         (lock-file-data (when (file-exists-p lock-file) (json-read-file lock-file))))
+    (if lock-file-data
+        (cdr (assoc 'packages lock-file-data))
+      [])))
+
+(defun ede-php-autoload-composer--merge-lock-file-data (project-dir autoloads)
+  "Merge the lock file content in the autoloads.
+
+PROJECT-DIR is the project root.
+
+AUTOLOADS is the current autoload configuration ot merge with."
+  (let* ((third-party-data (ede-php-autoload-composer--get-third-party-data project-dir))
+         (vendor-dir (expand-file-name "vendor" project-dir))
+         (i 0)
+         (l (length third-party-data))
+         current-data)
+    (while (< i l)
+      (setq current-data (aref third-party-data i)
+            autoloads (ede-php-autoload--merge-composer-autoloads
+                       current-data
+                       autoloads
+                       (expand-file-name (cdr (assoc 'name current-data)) vendor-dir))
+            i (1+ i)))
+    autoloads))
 
 (defun ede-php-autoload--append-composer-autoload-data (project-dir autoloads)
   "Add all composer autoload information.
 
 If PROJECT-DIR has a composer specification, add its autoload
 information into AUTOLOADS."
-  (let* ((root-data (ede-php-autoload--get-composer-data project-dir))
-         (third-party-dirs (ede-php-autoload--get-composer-third-party-dirs root-data)))
-    (setq autoloads (ede-php-autoload--merge-composer-autoloads root-data autoloads nil))
-
-    (dolist (dir third-party-dirs)
-      (setq autoloads (ede-php-autoload--merge-composer-autoloads
-                       (ede-php-autoload--get-composer-data
-                        (expand-file-name dir project-dir))
-                       autoloads
-                       dir)))
-    autoloads))
+  (let ((root-data (ede-php-autoload-composer--get-data project-dir)))
+    (ede-php-autoload-composer--merge-lock-file-data
+     project-dir
+     (ede-php-autoload--merge-composer-autoloads root-data autoloads nil))))
 
 
 (provide 'ede-php-autoload-composer)

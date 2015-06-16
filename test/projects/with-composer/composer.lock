@@ -1,0 +1,21 @@
+{
+    "packages": [
+        {
+            "name": "third-party/third-party",
+            "autoload": {
+                "psr-4": {
+                    "ThirdParty": "src"
+                }
+            }
+        },
+        {
+            "name": "target-dir/target-dir",
+                "autoload": {
+                    "psr-0": {
+                        "TargetDir\\Component\\": ""
+                    }
+                },
+            "target-dir": "TargetDir/Component"
+        }
+    ]
+}
