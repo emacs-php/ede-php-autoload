@@ -58,6 +58,11 @@ DIR is the directory to search from."
       (setq projs (cdr projs)))
     ans))
 
+(defun ede-php-autoload-project-file-for-dir (&optional dir)
+  "Return a full file name to the project file stored in DIR."
+  (let ((proj (ede-php-autoload-file-existing dir)))
+    (when proj (oref proj :file))))
+
 ;;;###autoload
 (defun ede-php-autoload-project-root (&optional dir)
   "Get the root directory for DIR."
