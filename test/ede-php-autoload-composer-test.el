@@ -1,4 +1,4 @@
-;;; ede-php-autoload-test.el --- ERT tests for ede-php-autoload-project -*- lexical-binding: t -*-
+;;; ede-php-autoload-composer-test.el --- Test for ede-php-autoload composer analysis -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015, Steven Rémot
 
@@ -26,53 +26,53 @@
 ;;
 
 ;;; Code:
-(ert-deftest ede-php-autoload-project-is-defined ()
+(ert-deftest ede-php-autoload-composer-project-is-defined ()
   "The EDE php autoload project should be defined."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "main.php" "with-composer"
     (should (ede-php-autoload-project-p (ede-current-project)))))
 
-(define-class-definition-test ede-php-autoload-find-psr0 ()
+(define-class-definition-test ede-php-autoload-composer-find-psr0 ()
   "The definition for a PSR-4 class should be found."
   :class "Psr0Ns_TheClass"
   :file-name "src/Psr0Ns/TheClass.php"
-  :project "without-composer")
+  :project "with-composer")
 
-(define-class-definition-test ede-php-autoload-find-psr4 ()
+(define-class-definition-test ede-php-autoload-composer-find-psr4 ()
   "The definition for a PSR-4 class should be found."
   :class "Psr4Ns\\TheClass"
   :file-name "src/Psr4Ns/TheClass.php"
-  :project "without-composer")
+  :project "with-composer")
 
-(define-class-definition-test ede-php-autoload-find-multidir-1 ()
+(define-class-definition-test ede-php-autoload-composer-find-multidir-1 ()
   "The definition of the first item of a multi-directory namespace should be found."
   :class "MultiDirNs\\TheClass1"
   :file-name "src/MultiDirNs1/TheClass1.php"
-  :project "without-composer")
+  :project "with-composer")
 
-(define-class-definition-test ede-php-autoload-find-multidir-2 ()
+(define-class-definition-test ede-php-autoload-composer-find-multidir-2 ()
   "The definition of the non-first item of a multi-directory namespace should be found."
   :class "MultiDirNs\\TheClass2"
   :file-name "src/MultiDirNs2/TheClass2.php"
-  :project "without-composer")
+  :project "with-composer")
 
-(define-class-definition-test ede-php-autoload-find-psr0-split-without-clash ()
-  "The definition of a class in a split namespace (iwht multiple sub-namespaces) should be found on PSR-0."
-  :class "Psr0Split\\Ns2\\TheClass"
-  :file-name "src/Psr0Split/Ns2/TheClass.php"
-  :project "without-composer")
-
-(define-class-definition-test ede-php-autoload-find-psr4-split-without-clash ()
-  "The definition of a class in a split namespace (iwht multiple sub-namespaces) should be found on PSR-4."
-  :class "Psr4Split\\Ns2\\TheClass"
-  :file-name "src/Psr4Split/Ns2/TheClass.php"
-  :project "without-composer")
-
-(define-class-definition-test ede-php-autoload-find-nothing ()
+(define-class-definition-test ede-php-autoload-composer-find-nothing ()
   "nil should be returned when no definition have been found."
   :class "Psr4Ns\\DoesNotExist"
   :file-name nil
-  :project "without-composer")
+  :project "with-composer")
 
-(provide 'ede-php-autoload-test)
+(define-class-definition-test ede-php-autoload-composer-find-third-party ()
+  "The definition for a composer dependency's class should be found."
+  :class "ThirdParty\\ThirdClass"
+  :file-name "vendor/third-party/third-party/src/ThirdClass.php"
+  :project "with-composer")
 
-;;; ede-php-autoload-test.el ends here
+(define-class-definition-test ede-php-autoload-composer-find-with-target-dir ()
+  "The definition for a composer dependency with a target dir should be found."
+  :class "TargetDir\\Component\\TheClass"
+  :file-name "vendor/target-dir/target-dir/TargetDir/Component/TheClass.php"
+  :project "with-composer")
+
+(provide 'ede-php-autoload-composer-test)
+
+;;; ede-php-autoload-composer-test.el ends here
