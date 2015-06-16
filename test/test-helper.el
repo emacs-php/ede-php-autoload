@@ -41,7 +41,8 @@
 ;; Load ede-php-autoload sources
 (mapc #'(lambda (file)
           (load (concat test-helper--project-root file)))
-      '("ede-php-autoload"
+      '("ede-php-autoload-composer"
+        "ede-php-autoload"
         "ede-php-autoload-semanticdb"
         "ede-php-autoload-mode"))
 
