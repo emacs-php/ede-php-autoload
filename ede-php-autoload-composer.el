@@ -112,9 +112,9 @@ STANDARD is either \"psr-0\" or \"psr-4\".  If STANDARD is
 
 COMPOSER-DATA is the parsed composer.json file.
 BASE-DIR is the prefix dir to add to each autoload path."
-  (let ((composer-autoloads (cdr (assoc 'autoload composer-data)))
-        key spec
-        base-spec)
+  (let ((composer-autoloads (append (cdr (assoc 'autoload composer-data))
+                                    (cdr (assoc 'autoload-dev composer-data))))
+        key spec base-spec)
     (dolist (autoload-part composer-autoloads)
       (when (member (car autoload-part) '(psr-0 psr-4))
         (setq key (intern (concat ":" (symbol-name (car autoload-part))))
@@ -143,7 +143,8 @@ PROJECT-DIR is the root directory."
   (let* ((lock-file (expand-file-name ede-php-autoload-composer-lock-file project-dir))
          (lock-file-data (when (file-exists-p lock-file) (json-read-file lock-file))))
     (if lock-file-data
-        (cdr (assoc 'packages lock-file-data))
+        (vconcat (cdr (assoc 'packages lock-file-data))
+                 (cdr (assoc 'packages-dev lock-file-data)))
       [])))
 
 (defun ede-php-autoload-composer--get-third-party-dir (package-data vendor-dir)
