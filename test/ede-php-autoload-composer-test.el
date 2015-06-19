@@ -73,6 +73,18 @@
   :file-name "vendor/target-dir/target-dir/TargetDir/Component/TheClass.php"
   :project "with-composer")
 
+(define-class-definition-test ede-php-autoload-composer-find-autoload-dev()
+  "EDE loads the autoload-dev development autoloading rules."
+  :class "AutoloadDev\\TestClass"
+  :file-name "src/AutoloadDev/TestClass.php"
+  :project "with-composer")
+
+(define-class-definition-test ede-php-autoload-composer-find-require-dev()
+  "EDE loads the require-dev development dependencies."
+  :class "DevDependency\\TestClass"
+  :file-name "vendor/third-party/dev-dependency/src/TestClass.php"
+  :project "with-composer")
+
 (provide 'ede-php-autoload-composer-test)
 
 ;;; ede-php-autoload-composer-test.el ends here
