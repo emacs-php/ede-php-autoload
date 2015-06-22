@@ -32,7 +32,6 @@
 ;;; Code:
 
 (require 'semantic/db)
-(require 'semantic/db-typecache)
 (require 'ede-php-autoload)
 
 (eval-and-compile
@@ -80,31 +79,6 @@ Return nil if it could not find the file or if the file was the current file."
   "Return the current `ede-php-autoload' project."
   (when (ede-php-autoload-project-p (ede-current-project))
     (ede-current-project)))
-
-(define-mode-local-override semanticdb-typecache-find
-  php-mode (type &optional path find-file-match)
-  "Search the typecache for TYPE in PATH.
-If type is a string, split the string, and search for the parts.
-If type is a list, treat the type as a pre-split string.
-PATH can be nil for the current buffer, or a semanticdb table.
-FIND-FILE-MATCH is non-nil to force all found tags to be loaded into a buffer."
-  ;; If type is a string, strip the leading separator.
-  (unless (listp type)
-    (setq type (list (replace-regexp-in-string "\\(^[\\]\\)" "" type))))
-
-  (let ((result
-         ;; First try finding the type using the default routine.
-         (or (semanticdb-typecache-find-default type path find-file-match)
-
-             ;; Or try ede-php-autoload
-             (car (semanticdb-find-tags-by-name-method
-                   (ede-php-autoload-semanticdb-table "EDE PHP ROOT")
-                   (mapconcat 'identity type "\\"))))))
-
-    (when (and result find-file-match)
-      (find-file-noselect (semantic-tag-file-name result)))
-
-    result))
 
 (cl-defmethod semanticdb-find-tags-by-name-method
   ((table ede-php-autoload-semanticdb-table) name &optional tags)
