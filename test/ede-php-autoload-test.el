@@ -31,6 +31,8 @@
   (with-current-project-file "main.php" "without-composer"
     (should (ede-php-autoload-project-p (ede-current-project)))))
 
+;; Class loading tests
+
 (define-class-definition-test ede-php-autoload-find-psr0 ()
   "The definition for a PSR-4 class should be found."
   :class "Psr0Ns_TheClass"
@@ -90,6 +92,50 @@ In this tests, the base namespace is split."
                       (ede-current-project)
                       "src/Psr4Split/Ns2/MyClass.php")
                      "Psr4Split\\Ns2\\MyClass"))))
+
+;; Type completion tests
+
+(ert-deftest ede-php-autoload-complete-psr-0-namespace-base ()
+  "`ede-php-autoload-complete-type' should complete PSR-0 prefixes."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0")
+                   '("Psr0Ns" "Psr0Split\\Ns1" "Psr0Split\\Ns2")))))
+
+(ert-deftest ede-php-autoload-complete-psr-0-with-slashes ()
+  "`ede-php-autoload-complete-type' should complete PSR-0 with
+slashes when detected."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0Ns\\T")
+                   '("TheClass")))))
+
+(ert-deftest ede-php-autoload-complete-psr-0-with-underscores ()
+  "`ede-php-autoload-complete-type' should complete PSR-0 with
+underscores when detected."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0Ns_T")
+                   '("Psr0Ns_TheClass")))))
+
+(ert-deftest ede-php-autoload-complete-psr-4-namespace-base ()
+  "`ede-php-autoload-complete-type' should complete PSR-4 prefixes."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr4")
+                   '("Psr4Ns" "Psr4Split\\Ns1" "Psr4Split\\Ns2")))))
+
+(ert-deftest ede-php-autoload-complete-psr-4-with-one-dir ()
+  "`ede-php-autoload-complete-type' should complete for PSR-4
+ namespace one directory."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
+                                                        "Psr4Ns\\T")
+                   '("TheClass" )))))
+
+(ert-deftest ede-php-autoload-complete-psr-4-with-multiple-dirs ()
+  "`ede-php-autoload-complete-type' should complete for PSR-4
+ namespace with multiple directories."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
+                                                        "MultiDirNs\\T")
+                   '("TheClass1" "TheClass2")))))
 
 (provide 'ede-php-autoload-test)
 

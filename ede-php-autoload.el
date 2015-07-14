@@ -1,6 +1,6 @@
 ;;; ede-php-autoload.el --- Simple EDE PHP Project
 
-;; Copyright (C) 2014, Steven Rémot
+;; Copyright (C) 2014, 2015, Steven Rémot
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;;         original code for C++ by Eric M. Ludlam <eric@siege-engine.com>
@@ -140,6 +140,31 @@ DIRECTORIES are absolute paths or relative to ROOT."
 
     existing-file))
 
+(defun ede-php-autoload--gather-relative-subfiles (ns-directories project-root relative-path prefix)
+  "Return all relative file names in namespace subdirectories.
+
+NS-DIRECTORIES are list of directories for a namespace, relative
+to the PROJECT-ROOT.
+
+RELATIVE-PATH is the path to browser in each NS-DIRECTORIES.
+
+Only files starting with PREFIX will be kept.
+
+Basically, it returns PROJECT-ROOT/{NS-DIRECTORIES}/RELATIVE-PATH/{PREFIX}*"
+  (let ((files '())
+        absolute-dir
+        full-dir)
+    (dolist (dir (ede-php-autoload--ensure-list ns-directories))
+        (setq absolute-dir (if (file-name-absolute-p dir)
+                               dir
+                             (expand-file-name dir project-root))
+              full-dir (expand-file-name relative-path absolute-dir)
+              files (append files (directory-files
+                                   full-dir
+                                   nil
+                                   (concat "^" (regexp-quote prefix))))))
+    files))
+
 ;; Autoloaders
 
 (defclass ede-php-autoload-class-loader ()
@@ -161,21 +186,36 @@ CLASS-NAME must be the full name of the class, with all its parent namespaces."
 Generate this class name using the class loader information.
 
 FILE-NAME must be absolute or relative to the project root."
-  (error "Method `ede-php-atoload-find-class-def-file' must be overriden"))
+  (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
-(defun ede-php-autoload--get-path-relative-to-ns (class-name namespace)
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-class-loader) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix. Completions are not guaranteed to give full class names,
+this can only suggest the next namespace."
+  '())
+
+(defun ede-php-autoload--get-path-relative-to-ns (class-name namespace &optional extension)
   "Return the path of the class file relative to the namespace directory.
 
 CLASS-NAME is the class name.
 
-NAMESPACE is the namespace to map."
+NAMESPACE is the namespace to map.
+
+EXTENSION is the file extension to put at the end of the file, \".php\" by default.
+
+Example: (ede-php-autoload--get-path-relative-to-ns \"My\\Ns\\My\\Class\" \"My\\Ns\")
+         => \"My/Class.php\""
   (concat
    (mapconcat
     'identity
     (nthcdr (length (split-string namespace (rx (or "\\" "_")) t))
             (split-string class-name (rx (or "\\" "_")) t))
     "/")
-   ".php"))
+   (or extension ".php")))
 
 ;;;###autoload
 (defclass ede-php-autoload-psr4-class-loader (ede-php-autoload-class-loader)
@@ -257,6 +297,73 @@ FILE-NAME must be absolute or relative to the project root."
                                               (length (cdr associated-ns)))))
         "\\")))))
 
+(defun ede-php-autoload--complete-for-psr4-pair (namespace directories project-root prefix)
+  "Get completion suggestions for a PSR-4 loader pair.
+
+NAMESPACE is the represented namespace.
+
+DIRECTORIES is a list of directories associated to the namespace.
+
+PROJECT-ROOT is the path to the project's root.
+
+PREFIX is the beginning of the type to complete."
+  (let ((list-directories (ede-php-autoload--ensure-list directories))
+        (suggestions '())
+        split-prefix
+        relative-path
+        absolute-dir
+        full-dir)
+    (cond
+     ((string-prefix-p prefix namespace t)
+      ;; If `prefix' is the beginning of `namespace', let's use
+      ;; `namespace' as suggestion
+      (push namespace suggestions))
+     ((string-prefix-p namespace prefix)
+      ;; If `prefix' starts with `namespace', let's use directory and
+      ;; file structure to create suggestions
+      (setq split-prefix (split-string prefix "\\\\")
+            relative-path (file-name-as-directory
+                           (ede-php-autoload--get-path-relative-to-ns
+                            (mapconcat 'identity
+                                       (butlast split-prefix)
+                                       "\\")
+                            namespace
+                            "")))
+
+      (setq suggestions (delete-dups
+                         (delete nil
+                                 (mapcar
+                                  #'file-name-base
+                                  (ede-php-autoload--gather-relative-subfiles
+                                   directories
+                                   project-root
+                                   relative-path
+                                   (car (last split-prefix)))))))))
+    suggestions))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-psr4-class-loader) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix. Completions are not guaranteed to give full class names,
+this can only suggest the next namespace."
+  (let ((project-root (ede-project-root-directory (ede-current-project)))
+        (namespaces (oref this namespaces))
+        (suggestions '())
+        pair)
+    (while namespaces
+      (setq pair (car namespaces)
+            suggestions (append suggestions
+                                (ede-php-autoload--complete-for-psr4-pair
+                                 (car pair)
+                                 (cdr pair)
+                                 project-root
+                                 prefix))
+            namespaces (cdr namespaces)))
+    suggestions))
+
 ;;;###autoload
 (defclass ede-php-autoload-psr0-class-loader (ede-php-autoload-class-loader)
   ((namespaces :initarg :namespaces
@@ -299,6 +406,92 @@ Generate this class name using the class loader information.
 FILE-NAME must be absolute or relative to the project root."
   nil) ;; Work in progress
 
+(defun ede-php-autoload--create-psr-0-suggestions (file-name prefix)
+  "Process FILE-NAME to make it a proper PSR-0 completion.
+
+It basically tries to infer whether \"_\" or \"\\\" should be used.
+
+PREFIX is the type prefix to complete."
+  (let ((suggestion (file-name-base file-name)))
+    (cond
+     ((string-match-p suggestion ".") nil)
+     ((string-match-p "\\\\" prefix) suggestion)
+     (t (mapconcat
+       'identity
+       (append (nbutlast (split-string prefix "_")) (list suggestion))
+       "_")))))
+
+(defun ede-php-autoload--complete-for-psr0-pair (namespace directories project-root prefix)
+  "Get completion suggestions for a PSR-4 loader pair.
+
+NAMESPACE is the represented namespace.
+
+DIRECTORIES is a list of directories associated to the namespace.
+
+PROJECT-ROOT is the path to the project's root.
+
+PREFIX is the beginning of the type to complete."
+  (let ((list-directories (ede-php-autoload--ensure-list directories))
+        (suggestions '())
+        split-prefix
+        relative-path
+        absolute-dir
+        separator
+        full-dir)
+    (cond
+     ((string-prefix-p prefix namespace t)
+      ;; If `prefix' is the beginning of `namespace', let's use
+      ;; `namespace' as suggestion
+      (push namespace suggestions))
+     ((string-prefix-p namespace prefix)
+      ;; If `prefix' starts with `namespace', let's use directory and
+      ;; file structure to create suggestions
+      (setq separator (if (string-match-p "\\\\" prefix) "\\" "_")
+            split-prefix (split-string prefix (regexp-quote separator))
+            relative-path (file-name-as-directory
+                           (ede-php-autoload--get-path-relative-to-ns
+                            (mapconcat 'identity
+                                       (butlast split-prefix)
+                                       separator)
+                            namespace
+                            "")))
+      (setq suggestions (delete-dups
+                         (delete nil
+                                 (mapcar
+                                  #'(lambda (file-name)
+                                      (ede-php-autoload--create-psr-0-suggestions
+                                       file-name
+                                       prefix))
+                                  (ede-php-autoload--gather-relative-subfiles
+                                   directories
+                                   project-root
+                                   relative-path
+                                   (car (last split-prefix)))))))))
+    suggestions))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-psr0-class-loader) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix. Completions are not guaranteed to give full class names,
+this can only suggest the next namespace."
+  (let ((project-root (ede-project-root-directory (ede-current-project)))
+        (namespaces (oref this namespaces))
+        (suggestions '())
+        pair)
+    (while namespaces
+      (setq pair (car namespaces)
+            suggestions (append suggestions
+                                (ede-php-autoload--complete-for-psr0-pair
+                                 (car pair)
+                                 (cdr pair)
+                                 project-root
+                                 prefix))
+            namespaces (cdr namespaces)))
+    suggestions))
+
 (defclass ede-php-autoload-aggregate-class-loader (ede-php-autoload-class-loader)
   ((class-loaders :initarg :class-loaders
                   :initform ()
@@ -332,6 +525,20 @@ FILE-NAME must be absolute or relative to the project root."
       (setq class-name (ede-php-autoload-get-class-name-for-file (car loaders) file-name)
             loaders (cdr loaders)))
     class-name))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-aggregate-class-loader) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix. Completions are not guaranteed to give full class names,
+this can only suggest the next namespace."
+  (let ((suggestions '()))
+    (dolist (loader (oref this class-loaders))
+      (setq suggestions (append suggestions
+                                (ede-php-autoload-complete-type-name loader prefix))))
+    suggestions))
 
 (defun ede-php-autoload-create-class-loader (conf)
   "Create a class loader from a configuration.
@@ -443,6 +650,16 @@ Generate this class name using the class loader information.
 
 FILE-NAME must be absolute or relative to the project root."
   (ede-php-autoload-get-class-name-for-file (oref this class-loader) file-name))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-project) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix. Completions are not guaranteed to give full class names,
+this can only suggest the next namespace."
+  (ede-php-autoload-complete-type-name (oref this class-loader) prefix))
 
 (provide 'ede-php-autoload)
 

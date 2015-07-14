@@ -97,6 +97,19 @@ Optional argument TAGS is a list of tags to search.
 Like `semanticdb-find-tags-by-name-method' for global."
   (semanticdb-find-tags-by-name-method table name tags))
 
+(defun ede-php-autoload-semanticdb--wrap-suggestion-in-tag (suggestion)
+  "Wrap the type completion SUGGESTION in a type tag."
+  (semantic-tag-new-type suggestion 'unknown '() '()))
+
+(cl-defmethod semanticdb-find-tags-for-completion-method
+  ((table ede-php-autoload-semanticdb-table) prefix &optional tags)
+  "In TABLE, find all occurrences of tags matching PREFIX.
+Optional argument TAGS is a list of tags to search.
+Returns a table of all matching tags."
+  (if (ede-php-autoload-current-project)
+      (mapcar #'ede-php-autoload-semanticdb--wrap-suggestion-in-tag
+              (ede-php-autoload-complete-type-name (ede-php-autoload-current-project) prefix))))
+
 (provide 'ede-php-autoload-semanticdb)
 
 ;;; ede-php-autoload-semanticdb.el ends here
