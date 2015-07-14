@@ -8,8 +8,16 @@
             "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"]
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "AutoloadDev": "src/AutoloadDev"
+        }
+    },
     "require": {
         "third-party/third-party": "*",
         "target-dir/target-dir": "*"
+    },
+    "require-dev": {
+        "third-party/dev-dependency": "*"
     }
 }

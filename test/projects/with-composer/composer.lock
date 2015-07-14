@@ -17,5 +17,15 @@
             },
             "target-dir": "TargetDir/Component"
         }
+    ],
+    "packages-dev": [
+        {
+            "name": "third-party/dev-dependency",
+            "autoload": {
+                "psr-4": {
+                    "DevDependency": "src"
+                }
+            }
+        }
     ]
 }
