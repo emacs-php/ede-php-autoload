@@ -31,8 +31,18 @@
   (with-current-project-file "main.php" "without-composer"
     (should (ede-php-autoload-project-p (ede-current-project)))))
 
-;; Class loading tests
+(ert-deftest ede-php-autoload-project-has-include-path ()
+  "The include path defined in the project is readable."
+  (with-current-project-file "main.php" "without-composer"
+    (should (string= (car (oref (ede-current-project) :include-path)) "."))))
 
+(ert-deftest ede-php-autoload-project-has-system-include-path ()
+  "The system include path defined in the project is readable."
+  (with-current-project-file "main.php" "without-composer"
+    (should (string= (car (oref (ede-current-project) :system-include-path))
+                     "/usr/share/php"))))
+
+;; Class loading tests
 (define-class-definition-test ede-php-autoload-find-psr0 ()
   "The definition for a PSR-4 class should be found."
   :class "Psr0Ns_TheClass"

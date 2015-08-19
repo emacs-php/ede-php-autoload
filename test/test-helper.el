@@ -57,7 +57,9 @@
                                              :psr-4 (("Psr4Ns" . "src/Psr4Ns")
                                                      ("MultiDirNs" . ("src/MultiDirNs1" "src/MultiDirNs2"))
                                                      ("Psr4Split\\Ns1" . "src/Psr4Split/Ns1")
-                                                     ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2"))))
+                                                     ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2")))
+                          :include-path '(".")
+                          :system-include-path '("/usr/share/php"))
 
 ;; Define function helpers
 (defun test-helper-get-project-file-path (file project)

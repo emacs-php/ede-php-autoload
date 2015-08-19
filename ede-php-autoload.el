@@ -576,7 +576,15 @@ to the associated directories."
   ((tracking-symbol :initform 'ede-php-autoload-project-list)
    (class-loader :initarg :class-loader
                  :type ede-php-autoload-class-loader
-                 :documentation "The project's class loader.")))
+                 :documentation "The project's class loader.")
+   (include-path :initarg :include-path
+                 :type list
+                 :initform ()
+                 :documentation "A list of PHP include paths specific to the project")
+   (system-include-path :initarg :system-include-path
+                        :type list
+                        :initform ()
+                        :documentation "The list of PHP include paths defined for the system.")))
 
 (defmethod initialize-instance ((this ede-php-autoload-project) &rest fields)
   "Make sure the :file is fully expanded."
@@ -588,7 +596,9 @@ to the associated directories."
 
     (call-next-method this (list
                             :file (plist-get (car fields) :file)
-                            :class-loader (ede-php-autoload-create-class-loader class-autoloads))))
+                            :class-loader (ede-php-autoload-create-class-loader class-autoloads)
+                            :include-path (plist-get (car fields) :include-path)
+                            :system-include-path (plist-get (car fields) :system-include-path))))
   (let ((f (expand-file-name (oref this :file))))
     ;; Remove any previous entries from the main list.
     (let ((old (eieio-instance-tracker-find (file-name-directory f)
