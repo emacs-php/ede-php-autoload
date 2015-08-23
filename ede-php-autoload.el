@@ -154,6 +154,15 @@ DIRECTORIES are absolute paths or relative to ROOT."
 CLASS-NAME must be the full name of the class, with all its parent namespaces."
   (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
+(defmethod ede-php-autoload-get-class-name-for-file
+  ((this ede-php-autoload-class-loader) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  (error "Method `ede-php-atoload-find-class-def-file' must be overriden"))
+
 (defun ede-php-autoload--get-path-relative-to-ns (class-name namespace)
   "Return the path of the class file relative to the namespace directory.
 
@@ -197,6 +206,57 @@ Return nil if no file has been found."
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
+(defun ede-php-autoload--get-longest-prefix (pairs target)
+  "Find the autoload pair which has the longest matching prefix of the target.
+
+PAIRS is an associative list.
+
+TARGET is a string."
+  (let ((current-pairs pairs)
+        extracted-list
+        extracted
+        longest-extracted
+        longest-pair)
+    (while current-pairs
+      (setq extracted-list (ede-php-autoload--ensure-list
+                            (cdar current-pairs)))
+      (while extracted-list
+        (setq extracted (car extracted-list))
+        (when (and (string-prefix-p extracted target)
+                   (or (null longest-pair)
+                       (> (length extracted) (length longest-extracted))))
+          (setq longest-extracted extracted
+                longest-pair (cons (caar current-pairs) extracted)))
+        (setq extracted-list (cdr extracted-list)))
+      (setq current-pairs (cdr current-pairs)))
+    longest-pair))
+
+(defmethod ede-php-autoload-get-class-name-for-file
+  ((this ede-php-autoload-psr4-class-loader) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  (let* ((project-root (ede-project-root-directory (ede-current-project)))
+         (rel-file-name (if (file-name-absolute-p file-name)
+                            (file-relative-name file-name project-root)
+                          file-name))
+         (associated-ns (ede-php-autoload--get-longest-prefix (oref this namespaces)
+                                                              rel-file-name)))
+    (when associated-ns
+      (replace-regexp-in-string
+       (rx "\\\\") (rx "\\")
+       (mapconcat
+        #'identity
+        (list
+         (car associated-ns)
+         (replace-regexp-in-string (rx "/")
+                                   (rx "\\")
+                                   (substring (file-name-sans-extension file-name)
+                                              (length (cdr associated-ns)))))
+        "\\")))))
+
 ;;;###autoload
 (defclass ede-php-autoload-psr0-class-loader (ede-php-autoload-class-loader)
   ((namespaces :initarg :namespaces
@@ -230,6 +290,15 @@ Return nil if no file has been found."
         (setq namespaces (cdr namespaces))))
     class-def-file))
 
+(defmethod ede-php-autoload-get-class-name-for-file
+  ((this ede-php-autoload-psr0-class-loader) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  nil) ;; Work in progress
+
 (defclass ede-php-autoload-aggregate-class-loader (ede-php-autoload-class-loader)
   ((class-loaders :initarg :class-loaders
                   :initform ()
@@ -249,6 +318,20 @@ Return nil if no file has been found."
       (setq class-def-file (ede-php-autoload-find-class-def-file (car loaders) class-name)
             loaders (cdr loaders)))
     class-def-file))
+
+(defmethod ede-php-autoload-get-class-name-for-file
+  ((this ede-php-autoload-aggregate-class-loader) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  (let ((loaders (oref this class-loaders))
+        class-name)
+    (while (and loaders (not class-name))
+      (setq class-name (ede-php-autoload-get-class-name-for-file (car loaders) file-name)
+            loaders (cdr loaders)))
+    class-name))
 
 (defun ede-php-autoload-create-class-loader (conf)
   "Create a class loader from a configuration.
@@ -351,6 +434,15 @@ If one doesn't exist, create a new one for this directory."
 
 CLASS-NAME must be the full name of the class, with all its parent namespaces."
   (ede-php-autoload-find-class-def-file (oref this class-loader) class-name))
+
+(defmethod ede-php-autoload-get-class-name-for-file
+  ((this ede-php-autoload-project) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  (ede-php-autoload-get-class-name-for-file (oref this class-loader) file-name))
 
 (provide 'ede-php-autoload)
 

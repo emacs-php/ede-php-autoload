@@ -73,6 +73,24 @@
   :file-name nil
   :project "without-composer")
 
+(ert-deftest ede-php-autoload-guess-class-name-psr4 ()
+  "A class definition can be guessed by looking PSR4 autoloading configuration."
+  (with-current-project-file "main.php" "without-composer"
+    (should (string= (ede-php-autoload-get-class-name-for-file
+                      (ede-current-project)
+                      "src/MultiDirNs1/SubNs1/SubNs2/Class.php")
+                     "MultiDirNs\\SubNs1\\SubNs2\\Class"))))
+
+(ert-deftest ede-php-autoload-guess-class-name-psr4-split-ns ()
+  "A class definition can be guessed by looking PSR4 autoloading configuration.
+
+In this tests, the base namespace is split."
+  (with-current-project-file "main.php" "without-composer"
+    (should (string= (ede-php-autoload-get-class-name-for-file
+                      (ede-current-project)
+                      "src/Psr4Split/Ns2/MyClass.php")
+                     "Psr4Split\\Ns2\\MyClass"))))
+
 (provide 'ede-php-autoload-test)
 
 ;;; ede-php-autoload-test.el ends here
