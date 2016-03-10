@@ -1,6 +1,6 @@
 ;;; ede-php-autoload-test.el --- ERT tests for ede-php-autoload-project -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015, Steven Rémot
+;; Copyright (C) 2015, 2016, Steven Rémot
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;; Homepage: https://github.com/stevenremot/ede-php-autoload
@@ -85,6 +85,12 @@
   :file-name nil
   :project "without-composer")
 
+(define-class-definition-test ede-php-autoload-find-classmap ()
+  "The definition of a class referred in a classmap should be found."
+  :class "ClassMapNs\\MyClass"
+  :file-name "src/ClassMapNs/MyClass.php"
+  :project "without-composer")
+
 (ert-deftest ede-php-autoload-guess-class-name-psr4 ()
   "A class definition can be guessed by looking PSR4 autoloading configuration."
   (with-current-project-file "main.php" "without-composer"
@@ -102,6 +108,14 @@ In this tests, the base namespace is split."
                       (ede-current-project)
                       "src/Psr4Split/Ns2/MyClass.php")
                      "Psr4Split\\Ns2\\MyClass"))))
+
+(ert-deftest ede-php-autoload-guess-class-name-for-classmap ()
+  "A class definition can be guessed by looking at classmap autoloading configuration."
+  (with-current-project-file "main.php" "without-composer"
+    (should (string= (ede-php-autoload-get-class-name-for-file
+                      (ede-current-project)
+                      "src/ClassMapNs/MyClass.php")
+                     "ClassMapNs\\MyClass"))))
 
 ;; Type completion tests
 
@@ -146,6 +160,13 @@ underscores when detected."
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
                                                         "MultiDirNs\\T")
                    '("TheClass1" "TheClass2")))))
+
+(ert-deftest ede-php-autoload-complete-class-map ()
+  "`ede-php-autoload-complete-type' should complete for classmap namespaces."
+  (with-current-project-file "main.php" "without-composer"
+    (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
+                                                        "ClassMapNs\\")
+                   '("ClassMapNs\\MyClass")))))
 
 (provide 'ede-php-autoload-test)
 

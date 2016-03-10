@@ -1,6 +1,6 @@
 ;;; ede-php-autoload.el --- Simple EDE PHP Project
 
-;; Copyright (C) 2014, 2015, Steven Rémot
+;; Copyright (C) 2014, 2015, 2016, Steven Rémot
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;;         original code for C++ by Eric M. Ludlam <eric@siege-engine.com>
@@ -217,6 +217,8 @@ Example: (ede-php-autoload--get-path-relative-to-ns \"My\\Ns\\My\\Class\" \"My\\
     "/")
    (or extension ".php")))
 
+
+
 ;;;###autoload
 (defclass ede-php-autoload-psr4-class-loader (ede-php-autoload-class-loader)
   ((namespaces :initarg :namespaces
@@ -364,6 +366,8 @@ this can only suggest the next namespace."
             namespaces (cdr namespaces)))
     suggestions))
 
+
+
 ;;;###autoload
 (defclass ede-php-autoload-psr0-class-loader (ede-php-autoload-class-loader)
   ((namespaces :initarg :namespaces
@@ -492,6 +496,68 @@ this can only suggest the next namespace."
             namespaces (cdr namespaces)))
     suggestions))
 
+
+;;;###autoload
+(defclass ede-php-autoload-classmap-class-loader (ede-php-autoload-class-loader)
+  ((class-hash :initarg :classes
+               :initform (makehash)
+               :documentation "A hash associating a class name and an absolute path to the file in whcih the class is defined.
+
+Use either a hash or an association list at instanciation."))
+  "Class loader for direct association between classes and files.")
+
+(defmethod initialize-instance ((this ede-php-autoload-classmap-class-loader) &rest fields)
+  "Process provided classmap to make it a hash."
+  (let ((classes (plist-get (car fields) :classes))
+        (class-hash))
+    (if (listp classes)
+        (progn
+          (setq class-hash (make-hash-table :test 'equal))
+          (dolist (pair classes)
+            (puthash (car pair) (cdr pair) class-hash)))
+      (setq class-hash classes))
+    (call-next-method this (list :classes class-hash))))
+
+(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-classmap-class-loader) class-name)
+  "Find the file in which CLASS-NAME is defined.
+
+Return nil if no file has been found."
+  (let ((file (gethash class-name (oref this class-hash))))
+    (when file
+      (expand-file-name file (ede-project-root-directory (ede-current-project))))))
+
+(defmethod ede-php-autoload-get-class-name-for-file ((this ede-php-autoload-classmap-class-loader) file-name)
+  "Generate a suitable class name for the current FILE-NAME.
+
+Generate this class name using the class loader information.
+
+FILE-NAME must be absolute or relative to the project root."
+  (let* ((project-root (ede-project-root (ede-current-project)))
+         (abs-file-name (expand-file-name file-name project-root)))
+    (catch 'class-name
+      (maphash
+       #'(lambda (class file)
+           (when (string= (expand-file-name file project-root) abs-file-name)
+             (throw 'class-name class)))
+       (oref this class-hash)))))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-classmap-class-loader) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix."
+  (let ((completions '()))
+    (maphash
+     #'(lambda (class file)
+         (when (string-prefix-p prefix class)
+           (add-to-list 'completions class)))
+     (oref this class-hash))
+    completions))
+
+
+
 (defclass ede-php-autoload-aggregate-class-loader (ede-php-autoload-class-loader)
   ((class-loaders :initarg :class-loaders
                   :initform ()
@@ -560,7 +626,10 @@ to the associated directories."
                                                                 :namespaces (cadr load-config))))
          ((equal key :psr-4)
           (add-to-list 'loaders (ede-php-autoload-psr4-class-loader "PSR-4"
-                                                                :namespaces (cadr load-config)))))
+                                                                    :namespaces (cadr load-config))))
+         ((equal key :class-map)
+          (add-to-list 'loaders (ede-php-autoload-classmap-class-loader "Classmap"
+                                                                        :classes (cadr load-config)))))
         (setq load-config (cddr load-config))))
     (ede-php-autoload-aggregate-class-loader "Aggregate loader"
                                          :class-loaders loaders)))

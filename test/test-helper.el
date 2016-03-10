@@ -1,6 +1,6 @@
 ;;; test-helper.el --- ERT test helpers -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015, Steven Rémot
+;; Copyright (C) 2015, 2016, Steven Rémot
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;; Homepage: https://github.com/stevenremot/ede-php-autoload
@@ -57,7 +57,8 @@
                                              :psr-4 (("Psr4Ns" . "src/Psr4Ns")
                                                      ("MultiDirNs" . ("src/MultiDirNs1" "src/MultiDirNs2"))
                                                      ("Psr4Split\\Ns1" . "src/Psr4Split/Ns1")
-                                                     ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2")))
+                                                     ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2"))
+                                             :class-map (("ClassMapNs\\MyClass" . "src/ClassMapNs/MyClass.php")))
                           :include-path '(".")
                           :system-include-path '("/usr/share/php"))
 
