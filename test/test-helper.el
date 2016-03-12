@@ -39,12 +39,12 @@
                                      (expand-file-name ".." test-helper--test-root)))
 
 ;; Load ede-php-autoload sources
-(mapc #'(lambda (file)
-          (load (concat test-helper--project-root file)))
-      '("ede-php-autoload-composer"
-        "ede-php-autoload"
-        "ede-php-autoload-semanticdb"
-        "ede-php-autoload-mode"))
+(add-to-list 'load-path test-helper--project-root)
+
+(require 'ede-php-autoload)
+(require 'ede-php-autoload-composer)
+(require 'ede-php-autoload-semanticdb)
+(require 'ede-php-autoload-mode)
 
 ;; Define projects
 ;; The composer projet is auto-detected
