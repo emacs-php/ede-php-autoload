@@ -1,0 +1,48 @@
+#+TITLE: How to create a new class loader
+
+* Examples
+
+  To see class loader implementation examples, look at the standard
+  class loaders defined in ~ede-php-autoload/class-loader~. The
+  simplest one is ~ede-php-autoload-classmap-class-loader~.
+
+* Define the class loader
+
+  A class loader is an EIEIO class. It is a subclass of
+  ~ede-php-autoload-class-loader~. It should implement the following
+  methods, even if it implies doing nothing in it:
+
+  - ~ede-php-autoload-find-class-def-file~ that retrieves the file in
+    which the given class is defined.
+
+  - ~ede-php-autoload-get-class-name-for-file~ which returns the name
+    of the class that should be defined in the given file.
+
+  - ~ede-php-autoload-complete-type-name~ that return possible
+    completions for the prefix of a fully qualified name.
+
+  At this point, the class loader can be used by sending an instance
+  of it to an ~ede-php-autoload-project~ like this:
+
+  #+BEGIN_SRC emacs-lisp
+    (ede-php-autoload-project "Custom project" :loaders (my-custom-class-loader "Custom loader" <args>))
+  #+END_SRC
+
+* Define the factory
+
+  Giving a class loader by instance to the EDE project is not really
+  handy, and does not play nicely with other class loaders. It is
+  necesary to define a factory to be able to use the new class loader
+  with a user-friendly API like this:
+
+  #+BEGIN_SRC emacs-lisp
+    (ede-php-autoload-project "Custom project"
+                              :class-autoloads '(:custom <args>))
+  #+END_SRC
+
+  The factory can be defined using the macro ~ede-php-autoload-class-loader-define-factory~:
+
+  #+BEGIN_SRC emacs-lisp
+    (ede-php-autoload-class-loader-define-factory :custom (configuration)
+      (my-custom-class-loader "Custom" configuration))
+  #+END_SRC

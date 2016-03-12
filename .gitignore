@@ -1,5 +1,7 @@
 *~
 *.elc
+*.info
+*.texi
 .cask
 dist
 ede-php-autoload-pkg.el
