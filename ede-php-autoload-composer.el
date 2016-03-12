@@ -186,6 +186,14 @@ information into AUTOLOADS."
      project-dir
      (ede-php-autoload--merge-composer-autoloads root-data autoloads nil))))
 
+(defun ede-php-autoload-proj-root ()
+  "Auto-detect composer project root.
+
+Return the parent directory of the current buffer file that contains a composer.json file."
+  (let ((dominating-file (locate-dominating-file (buffer-file-name) ede-php-autoload-composer-file)))
+    (when dominating-file
+      (file-name-directory dominating-file))))
+
 
 (provide 'ede-php-autoload-composer)
 

@@ -50,7 +50,7 @@
 ;; The composer projet is auto-detected
 (ede-php-autoload-project "Without composer"
                           :file (concat test-helper--projects-root
-                                        "without-composer/main.php")
+                                        "without-composer/project")
                           :class-autoloads '(:psr-0 (("Psr0Ns" . "src/Psr0Ns")
                                                      ("Psr0Split\\Ns1" . "src/Psr0Split/Ns1")
                                                      ("Psr0Split\\Ns2" . "src/Psr0Split/Ns2"))
@@ -90,7 +90,7 @@ PROJECT is the project in which the test is done."
   (declare (indent defun))
   `(ert-deftest ,name ()
      ,doc
-     (with-current-project-file "main.php" ,project
+     (with-current-project-file "src/main.php" ,project
        ,(if file-name
             `(should (string=
                       ,(test-helper-get-project-file-path file-name

@@ -28,7 +28,7 @@
 ;;; Code:
 (ert-deftest ede-php-autoload-composer-project-is-defined ()
   "The EDE php autoload project should be defined."
-  (with-current-project-file "main.php" "with-composer"
+  (with-current-project-file "src/main.php" "with-composer"
     (should (ede-php-autoload-project-p (ede-current-project)))))
 
 (define-class-definition-test ede-php-autoload-composer-find-psr0 ()

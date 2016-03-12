@@ -89,12 +89,14 @@ intended to be a subproject, so this argument is ignored."
                               :directory truedir
                               :file (expand-file-name ede-php-autoload-composer-file
                                                       truedir))))
+
 ;;;###autoload
 (ede-add-project-autoload
  (ede-project-autoload "php-autoload"
                        :name "PHP AUTOLOAD"
                        :file 'ede-php-autoload
                        :proj-file ede-php-autoload-composer-file
+                       :proj-root 'ede-php-autoload-proj-root
                        :load-type #'ede-php-autoload-load
                        :class-sym 'ede-php-autoload-project
                        :new-p nil

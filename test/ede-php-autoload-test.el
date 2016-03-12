@@ -28,17 +28,17 @@
 ;;; Code:
 (ert-deftest ede-php-autoload-project-is-defined ()
   "The EDE php autoload project should be defined."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (ede-php-autoload-project-p (ede-current-project)))))
 
 (ert-deftest ede-php-autoload-project-has-include-path ()
   "The include path defined in the project is readable."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (string= (car (oref (ede-current-project) :include-path)) "."))))
 
 (ert-deftest ede-php-autoload-project-has-system-include-path ()
   "The system include path defined in the project is readable."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (string= (car (oref (ede-current-project) :system-include-path))
                      "/usr/share/php"))))
 
@@ -93,7 +93,7 @@
 
 (ert-deftest ede-php-autoload-guess-class-name-psr4 ()
   "A class definition can be guessed by looking PSR4 autoloading configuration."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (string= (ede-php-autoload-get-class-name-for-file
                       (ede-current-project)
                       "src/MultiDirNs1/SubNs1/SubNs2/Class.php")
@@ -103,7 +103,7 @@
   "A class definition can be guessed by looking PSR4 autoloading configuration.
 
 In this tests, the base namespace is split."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (string= (ede-php-autoload-get-class-name-for-file
                       (ede-current-project)
                       "src/Psr4Split/Ns2/MyClass.php")
@@ -111,7 +111,7 @@ In this tests, the base namespace is split."
 
 (ert-deftest ede-php-autoload-guess-class-name-for-classmap ()
   "A class definition can be guessed by looking at classmap autoloading configuration."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (string= (ede-php-autoload-get-class-name-for-file
                       (ede-current-project)
                       "src/ClassMapNs/MyClass.php")
@@ -121,34 +121,34 @@ In this tests, the base namespace is split."
 
 (ert-deftest ede-php-autoload-complete-psr-0-namespace-base ()
   "`ede-php-autoload-complete-type' should complete PSR-0 prefixes."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0")
                    '("Psr0Ns" "Psr0Split\\Ns1" "Psr0Split\\Ns2")))))
 
 (ert-deftest ede-php-autoload-complete-psr-0-with-slashes ()
   "`ede-php-autoload-complete-type' should complete PSR-0 with
 slashes when detected."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0Ns\\T")
                    '("TheClass")))))
 
 (ert-deftest ede-php-autoload-complete-psr-0-with-underscores ()
   "`ede-php-autoload-complete-type' should complete PSR-0 with
 underscores when detected."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr0Ns_T")
                    '("Psr0Ns_TheClass")))))
 
 (ert-deftest ede-php-autoload-complete-psr-4-namespace-base ()
   "`ede-php-autoload-complete-type' should complete PSR-4 prefixes."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project) "Psr4")
                    '("Psr4Ns" "Psr4Split\\Ns1" "Psr4Split\\Ns2")))))
 
 (ert-deftest ede-php-autoload-complete-psr-4-with-one-dir ()
   "`ede-php-autoload-complete-type' should complete for PSR-4
  namespace one directory."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
                                                         "Psr4Ns\\T")
                    '("TheClass" )))))
@@ -156,14 +156,14 @@ underscores when detected."
 (ert-deftest ede-php-autoload-complete-psr-4-with-multiple-dirs ()
   "`ede-php-autoload-complete-type' should complete for PSR-4
  namespace with multiple directories."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
                                                         "MultiDirNs\\T")
                    '("TheClass1" "TheClass2")))))
 
 (ert-deftest ede-php-autoload-complete-class-map ()
   "`ede-php-autoload-complete-type' should complete for classmap namespaces."
-  (with-current-project-file "main.php" "without-composer"
+  (with-current-project-file "src/main.php" "without-composer"
     (should (equal (ede-php-autoload-complete-type-name (ede-current-project)
                                                         "ClassMapNs\\")
                    '("ClassMapNs\\MyClass")))))
