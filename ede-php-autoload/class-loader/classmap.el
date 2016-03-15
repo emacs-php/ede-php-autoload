@@ -86,7 +86,7 @@ prefix."
         (progn
           (setq class-hash (make-hash-table :test 'equal))
           (dolist (pair classes)
-            (puthash (car pair) (cdr pair) class-hash)))
+            (puthash (format "%s" (car pair)) (cdr pair) class-hash)))
       (setq class-hash classes))
 
     (ede-php-autoload-classmap-class-loader "Classmap" :classes class-hash)))

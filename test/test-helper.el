@@ -58,7 +58,7 @@
                                                      ("MultiDirNs" . ("src/MultiDirNs1" "src/MultiDirNs2"))
                                                      ("Psr4Split\\Ns1" . "src/Psr4Split/Ns1")
                                                      ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2"))
-                                             :class-map (("ClassMapNs\\MyClass" . "src/ClassMapNs/MyClass.php")))
+                                             :class-map ((ClassMapNs\\MyClass . "src/ClassMapNs/MyClass.php")))
                           :include-path '(".")
                           :system-include-path '("/usr/share/php"))
 

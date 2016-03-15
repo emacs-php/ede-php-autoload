@@ -2,7 +2,7 @@
 
 (package "ede-php-autoload" "0.2.0" "PHP autoloading implementation for Semantic")
 
-(files "*.el")
+(files "*.el" "ede-php-autoload/**/*.el")
 
 (development
  (depends-on "ert-runner"))
