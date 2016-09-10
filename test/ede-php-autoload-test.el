@@ -42,6 +42,11 @@
     (should (string= (car (oref (ede-current-project) :system-include-path))
                      "/usr/share/php"))))
 
+(ert-deftest ede-php-autoload-creates-project-in-dired ()
+  "The EDE php autoload project instanciates properly in a dired buffer."
+  (with-current-project-file "." "without-composer"
+                             (should (ede-php-autoload-project-p (ede-current-project)))))
+
 ;; Class loading tests
 (define-class-definition-test ede-php-autoload-find-psr0 ()
   "The definition for a PSR-4 class should be found."

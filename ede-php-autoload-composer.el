@@ -190,7 +190,7 @@ information into AUTOLOADS."
   "Auto-detect composer project root.
 
 Return the parent directory of the current buffer file that contains a composer.json file."
-  (let ((dominating-file (locate-dominating-file (buffer-file-name) ede-php-autoload-composer-file)))
+  (let ((dominating-file (locate-dominating-file (or (buffer-file-name) default-directory) ede-php-autoload-composer-file)))
     (when dominating-file
       (file-name-directory dominating-file))))
 
