@@ -1,6 +1,4 @@
 #+TITLE: ede-php-autoload TODO List
 
-- Write more ERT tests
 - Detect more project types
-- Write a full documentation
-- Restructure the whole code to make it easily extensible
+- Use ~cl-lib~
