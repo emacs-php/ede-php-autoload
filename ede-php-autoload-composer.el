@@ -49,13 +49,13 @@ BASE-DIR is the directory PATH is relative to.
 
 STANDARD is the autoload standard (e.g. `psr-0')."
 
-    (when (stringp base-dir)
-      (setq path (concat (file-name-as-directory base-dir) path)))
+  (when base-dir
+    (setq path (concat (file-name-as-directory base-dir) path)))
 
-    (when (string= "psr-0" standard)
-      (setq path (concat path (replace-regexp-in-string (rx "\\") "/"  namespace) "/")))
+  (when (string= "psr-0" standard)
+    (setq path (concat path (replace-regexp-in-string (rx "\\") "/"  namespace) "/")))
 
-    (cons namespace path))
+  (cons namespace path))
 
 (defun ede-php-autoload--format-composer-multiple-dirs
     (namespace paths base-dir standard)
@@ -70,7 +70,7 @@ BASE-DIR is the directory PATHS are relative to.
 STANDARD is the autoload standard (e.g. `psr-0')."
   (let  ((list-paths (append paths '())))
 
-    (when (stringp base-dir)
+    (when base-dir
       (mapc #'(lambda (path)
                 (concat (file-name-as-directory base-dir) path))
             list-paths))
