@@ -91,7 +91,7 @@ PREFIX is the type prefix to complete."
        "_")))))
 
 (defun ede-php-autoload--complete-for-psr0-pair (namespace directories project-root prefix)
-  "Get completion suggestions for a PSR-4 loader pair.
+  "Get completion suggestions for a PSR-0 loader pair.
 
 NAMESPACE is the represented namespace.
 

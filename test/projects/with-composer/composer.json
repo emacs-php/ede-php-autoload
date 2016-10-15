@@ -1,11 +1,13 @@
 {
     "autoload": {
         "psr-0": {
-            "Psr0Ns": "src/"
+            "Psr0Ns": "src/",
+            "": "src/Fallback/Psr0"
         },
         "psr-4": {
             "Psr4Ns": "src/Psr4Ns",
-            "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"]
+            "MultiDirNs": ["src/MultiDirNs1", "src/MultiDirNs2"],
+            "": "src/Fallback/Psr4"
         }
     },
     "autoload-dev": {

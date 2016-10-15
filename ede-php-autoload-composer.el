@@ -97,7 +97,11 @@ Then, if BASE-DIR is a string, prepend it to the autoload path.
 STANDARD is either \"psr-0\" or \"psr-4\".  If STANDARD is
 \"psr-0\", append namespace name to the path like composer does."
   (let* ((namespace (symbol-name (car pair)))
-         (last-character (aref namespace (1- (length namespace))))
+
+         (last-character (if (string= namespace "")
+                             nil
+                           (aref namespace (1- (length namespace)))))
+
          (path (cdr pair)))
 
     (when (member last-character '(?\\ ?_))
