@@ -3,7 +3,7 @@ CASK=cask
 .PHONY: test test-simple elc package clean
 
 test-simple:
-	$(CASK) exec ert-runner
+	$(CASK) exec ecukes
 
 test:
 	$(MAKE) clean
