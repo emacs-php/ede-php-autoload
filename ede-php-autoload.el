@@ -64,7 +64,7 @@ DIR is the directory to search from."
 (defun ede-php-autoload-project-file-for-dir (&optional dir)
   "Return a full file name to the project file stored in DIR."
   (let ((proj (ede-php-autoload-file-existing dir)))
-    (when proj (oref proj file))))
+    (when proj (oref proj :file))))
 
 ;;;###autoload
 (defun ede-php-autoload-project-root (&optional dir)
@@ -163,7 +163,7 @@ to the associated directories."
                             :class-loader (ede-php-autoload-create-class-loader class-autoloads)
                             :include-path (plist-get (car fields) :include-path)
                             :system-include-path (plist-get (car fields) :system-include-path))))
-  (let ((f (expand-file-name (oref this file))))
+  (let ((f (expand-file-name (oref this :file))))
     ;; Remove any previous entries from the main list.
     (let ((old (eieio-instance-tracker-find (file-name-directory f)
                                             :directory
