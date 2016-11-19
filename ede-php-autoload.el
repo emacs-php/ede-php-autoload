@@ -38,7 +38,9 @@
 ;; This EDE project can then be used through a semanticdb
 ;; backend.  Enable it by activating `ede-php-autoload-mode'.
 ;;
+
 (require 'ede)
+
 (require 'ede-php-autoload-composer)
 (require 'ede-php-autoload/class-loader)
 
@@ -62,7 +64,7 @@ DIR is the directory to search from."
 (defun ede-php-autoload-project-file-for-dir (&optional dir)
   "Return a full file name to the project file stored in DIR."
   (let ((proj (ede-php-autoload-file-existing dir)))
-    (when proj (oref proj :file))))
+    (when proj (oref proj file))))
 
 ;;;###autoload
 (defun ede-php-autoload-project-root (&optional dir)
@@ -91,17 +93,18 @@ intended to be a subproject, so this argument is ignored."
                                                       truedir))))
 
 ;;;###autoload
-(ede-add-project-autoload
- (ede-project-autoload "php-autoload"
-                       :name "PHP AUTOLOAD"
-                       :file 'ede-php-autoload
-                       :proj-file ede-php-autoload-composer-file
-                       :proj-root 'ede-php-autoload-proj-root
-                       :load-type #'ede-php-autoload-load
-                       :class-sym 'ede-php-autoload-project
-                       :new-p nil
-                       :safe-p t)
- 'unique)
+(eval-after-load 'ede
+  '(ede-add-project-autoload
+     (ede-project-autoload "php-autoload"
+                           :name "PHP AUTOLOAD"
+                           :file 'ede-php-autoload
+                           :proj-file "composer.json"
+                           :proj-root 'ede-php-autoload-project-root
+                           :load-type 'ede-php-autoload-load
+                           :class-sym 'ede-php-autoload-project
+                           :new-p nil
+                           :safe-p t)
+     'unique))
 
 ;;;;
 ;;;; Class loaders
@@ -160,7 +163,7 @@ to the associated directories."
                             :class-loader (ede-php-autoload-create-class-loader class-autoloads)
                             :include-path (plist-get (car fields) :include-path)
                             :system-include-path (plist-get (car fields) :system-include-path))))
-  (let ((f (expand-file-name (oref this :file))))
+  (let ((f (expand-file-name (oref this file))))
     ;; Remove any previous entries from the main list.
     (let ((old (eieio-instance-tracker-find (file-name-directory f)
                                             :directory
