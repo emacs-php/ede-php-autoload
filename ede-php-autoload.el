@@ -64,15 +64,16 @@ DIR is the directory to search from."
 (defun ede-php-autoload-project-file-for-dir (&optional dir)
   "Return a full file name to the project file stored in DIR."
   (let ((proj (ede-php-autoload-file-existing dir)))
-    (when proj (oref proj :file))))
+    (when proj (oref proj file))))
 
 ;;;###autoload
-(defun ede-php-autoload-project-root (&optional dir)
-  "Get the root directory for DIR."
-  (let ((projfile (ede-php-autoload-project-file-for-dir
-                   (or dir default-directory))))
-    (when projfile
-      (file-name-directory projfile))))
+(defun ede-php-autoload-proj-root ()
+  "Auto-detect composer project root.
+
+Return the parent directory of the current buffer file that contains a composer.json file."
+  (let ((dominating-file (locate-dominating-file (or (buffer-file-name) default-directory) ede-php-autoload-composer-file)))
+    (when dominating-file
+      (file-name-directory dominating-file))))
 
 ;; Composer project detection
 
@@ -99,7 +100,7 @@ intended to be a subproject, so this argument is ignored."
                            :name "PHP AUTOLOAD"
                            :file 'ede-php-autoload
                            :proj-file "composer.json"
-                           :proj-root 'ede-php-autoload-project-root
+                           :proj-root 'ede-php-autoload-proj-root
                            :load-type 'ede-php-autoload-load
                            :class-sym 'ede-php-autoload-project
                            :new-p nil
@@ -163,7 +164,7 @@ to the associated directories."
                             :class-loader (ede-php-autoload-create-class-loader class-autoloads)
                             :include-path (plist-get (car fields) :include-path)
                             :system-include-path (plist-get (car fields) :system-include-path))))
-  (let ((f (expand-file-name (oref this :file))))
+  (let ((f (expand-file-name (oref this file))))
     ;; Remove any previous entries from the main list.
     (let ((old (eieio-instance-tracker-find (file-name-directory f)
                                             :directory

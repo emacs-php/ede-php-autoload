@@ -25,6 +25,7 @@
 ;;; Commentary:
 ;;
 (require 'cl-lib)
+(require 'package)
 ;;; Code:
 
 (global-ede-mode 1)
@@ -40,11 +41,9 @@
 
 ;; Load ede-php-autoload sources
 (add-to-list 'load-path test-helper--project-root)
+(package-generate-autoloads "ede-php-autoload" test-helper--project-root)
 
-(require 'ede-php-autoload)
-(require 'ede-php-autoload-composer)
-(require 'ede-php-autoload-semanticdb)
-(require 'ede-php-autoload-mode)
+(load (concat test-helper--project-root "ede-php-autoload-autoloads.el"))
 
 ;; Define projects
 ;; The composer projet is auto-detected
