@@ -38,6 +38,9 @@
 (defconst ede-php-autoload-composer-lock-file "composer.lock"
   "File name for the composer dependecies lock file.")
 
+(defvar ede-php-autoload-composer--visitors nil
+  "The visitors that will be executed to generate composer autoloads.")
+
 (defun ede-php-autoload--format-composer-single-dir (namespace path base-dir standard)
   "Format a composer autoload pair when the path is a single string.
 
@@ -111,14 +114,16 @@ STANDARD is either \"psr-0\" or \"psr-4\".  If STANDARD is
         (ede-php-autoload--format-composer-single-dir namespace path base-dir standard)
       (ede-php-autoload--format-composer-multiple-dirs namespace path base-dir standard))))
 
-(defun ede-php-autoload--merge-composer-autoloads (composer-data autoloads &optional base-dir)
-  "Load the autoload information in COMPOSER-DATA and merge it with AUTOLOADS.
+(defun ede-php-autoload-composer-create-autoloads-from-data (composer-data &optional base-dir)
+  "Return internal autoloads from a composer.json file data.
 
-COMPOSER-DATA is the parsed composer.json file.
+COMPOSER-DATA is the parsed content of a composer.json file.
 BASE-DIR is the prefix dir to add to each autoload path."
   (let ((composer-autoloads (append (cdr (assoc 'autoload composer-data))
                                     (cdr (assoc 'autoload-dev composer-data))))
-        key spec base-spec)
+        (autoloads '())
+        key spec)
+
     (dolist (autoload-part composer-autoloads)
       (when (member (car autoload-part) '(psr-0 psr-4))
         (setq key (intern (concat ":" (symbol-name (car autoload-part))))
@@ -127,10 +132,44 @@ BASE-DIR is the prefix dir to add to each autoload path."
                                (ede-php-autoload--format-composer-pair pair base-dir (car autoload-part)))
                            (cdr autoload-part))
 
-              base-spec (plist-get autoloads key))
+              autoloads (plist-put autoloads
+                                   key
+                                   (append (plist-get autoloads key) spec)))))
 
-        (setq autoloads (plist-put autoloads key (append base-spec spec)))))
     autoloads))
+
+(defun ede-php-autoload-composer-merge-autoloads (base-autoloads new-autoloads)
+  "Merge two internal autoload definitions in one.
+
+BASE-AUTOLOADS and NEW-AUTOLOADS are two internal autoload lists.
+
+NEW-AUTOLOADS will be merged into BASE-AUTOLOADS.  BASE-AUTOLOADS will be mutated."
+  (let ((autoloads base-autoloads)
+        (index 0)
+        (new-autoloads-length (length new-autoloads))
+        key value)
+
+    (while (< index new-autoloads-length)
+      (setq key (nth index new-autoloads)
+
+            value (nth (1+ index) new-autoloads)
+
+            autoloads (plist-put autoloads
+                                 key
+                                 (append
+                                  (plist-get autoloads key)
+                                  value))
+
+            index (+ index 2)))
+
+    autoloads))
+
+(defun ede-php-autoload--merge-composer-autoloads (composer-data autoloads &optional base-dir)
+  "Load the autoload information in COMPOSER-DATA and merge it with AUTOLOADS.
+
+COMPOSER-DATA is the parsed composer.json file.
+BASE-DIR is the prefix dir to add to each autoload path."
+  (ede-php-autoload-composer-merge-autoloads autoloads (ede-php-autoload-composer-create-autoloads-from-data composer-data base-dir)))
 
 (defun ede-php-autoload-composer--get-data (dir)
   "Return the parsed composer.json file in DIR if any.
@@ -140,16 +179,14 @@ Return nil otherwise."
     (when (file-exists-p composer-file)
       (json-read-file composer-file))))
 
-(defun ede-php-autoload-composer--get-third-party-data (project-dir)
+(defun ede-php-autoload-composer--get-third-party-data (composer-lock)
   "Return the composer packages in composer.lock file.
 
-PROJECT-DIR is the root directory."
-  (let* ((lock-file (expand-file-name ede-php-autoload-composer-lock-file project-dir))
-         (lock-file-data (when (file-exists-p lock-file) (json-read-file lock-file))))
-    (if lock-file-data
-        (vconcat (cdr (assoc 'packages lock-file-data))
-                 (cdr (assoc 'packages-dev lock-file-data)))
-      [])))
+COMPOSER-LOCK is the content of the composer.lock file."
+  (if composer-lock
+      (vconcat (cdr (assoc 'packages composer-lock))
+               (cdr (assoc 'packages-dev composer-lock)))
+    []))
 
 (defun ede-php-autoload-composer--get-third-party-dir (package-data vendor-dir)
   "Return the directory that contain third party sources.
@@ -160,13 +197,70 @@ composer.lock file.
 VENDOR-DIR is the project's vendor directory."
   (expand-file-name (cdr (assoc 'name package-data)) vendor-dir))
 
-(defun ede-php-autoload-composer--merge-lock-file-data (project-dir autoloads)
-  "Merge the lock file content in the autoloads.
+;; Visitor system ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PROJECT-DIR is the project root.
+(defun ede-php-autoload-composer-make-context (composer-data composer-lock project-dir)
+  "Create the context in which the composer project is defined.
 
-AUTOLOADS is the current autoload configuration ot merge with."
-  (let* ((third-party-data (ede-php-autoload-composer--get-third-party-data project-dir))
+COMPOSER-DATA is the parsed content of the composer.json file.
+
+COMPOSER-LOCK is the parsed content of the composer.lock file.
+
+PROJECT-DIR is the absolute path of the project directory."
+  `((composer-data . ,composer-data)
+    (composer-lock . ,composer-lock)
+    (project-dir . ,project-dir)))
+
+(defun ede-php-autoload-composer-get-composer-data (context)
+  "Return the content of the composer.json file in the given CONTEXT."
+  (cdr (assoc 'composer-data context)))
+
+(defun ede-php-autoload-composer-get-composer-lock (context)
+  "Return the content of the composer.lock file in the given CONTEXT."
+  (cdr (assoc 'composer-lock context)))
+
+(defun ede-php-autoload-composer-get-project-dir (context)
+  "Return the absolute path to the project directory in the given CONTEXT."
+  (cdr (assoc 'project-dir context)))
+
+(defun ede-php-autoload-composer-define-visitor (visitor)
+  "Add a new VISITOR to the list of composer visitors.
+
+A visitor is a function that takes a context and the current list
+of autoloads, and returns a new list of autoloads.
+
+All visitors are executed when a composer project is detected, to
+generate the composer autoloads."
+  (add-to-list 'ede-php-autoload-composer--visitors visitor))
+
+(defun ede-php-autoload-composer--run-visitors (context autoloads)
+  "Run all the visitors on a specified CONTEXT, with the initial AUTOLOADS.
+
+Returns the new list of autoloads."
+  (let ((current-autoloads autoloads))
+    (dolist (visitor ede-php-autoload-composer--visitors)
+      (setq current-autoloads (funcall visitor context current-autoloads)))
+    current-autoloads))
+
+;; Basic visitors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ede-php-autoload-composer--merge-composer-data-autoloads (context autoloads)
+  "Load the autoload information in composer.json and merge it with autoloads.
+
+CONTEXT is the composer context.
+AUTOLOADS is the current list of autoloads."
+  (ede-php-autoload--merge-composer-autoloads (ede-php-autoload-composer-get-composer-data context) autoloads nil))
+
+(ede-php-autoload-composer-define-visitor #'ede-php-autoload-composer--merge-composer-data-autoloads)
+
+(defun ede-php-autoload-composer--merge-composer-lock-autoloads (context autoloads)
+  "Load the autoload information from lock file and merge it with autoloads.
+
+CONTEXT is the composer context.
+AUTOLOADS is the current list of autoloads."
+  (let* ((project-dir (ede-php-autoload-composer-get-project-dir context))
+         (composer-lock (ede-php-autoload-composer-get-composer-lock context))
+         (third-party-data (ede-php-autoload-composer--get-third-party-data composer-lock))
          (vendor-dir (expand-file-name "vendor" project-dir))
          (i 0)
          (l (length third-party-data))
@@ -180,15 +274,20 @@ AUTOLOADS is the current autoload configuration ot merge with."
             i (1+ i)))
     autoloads))
 
+(ede-php-autoload-composer-define-visitor #'ede-php-autoload-composer--merge-composer-lock-autoloads)
+
+;; Entry point ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun ede-php-autoload--append-composer-autoload-data (project-dir autoloads)
   "Add all composer autoload information.
 
 If PROJECT-DIR has a composer specification, add its autoload
 information into AUTOLOADS."
-  (let ((root-data (ede-php-autoload-composer--get-data project-dir)))
-    (ede-php-autoload-composer--merge-lock-file-data
-     project-dir
-     (ede-php-autoload--merge-composer-autoloads root-data autoloads nil))))
+  (let* ((composer-data (ede-php-autoload-composer--get-data project-dir))
+         (lock-file (expand-file-name ede-php-autoload-composer-lock-file project-dir))
+         (composer-lock (when (file-exists-p lock-file) (json-read-file lock-file)))
+         (context (ede-php-autoload-composer-make-context composer-data composer-lock project-dir)))
+    (ede-php-autoload-composer--run-visitors context autoloads)))
 
 
 (provide 'ede-php-autoload-composer)

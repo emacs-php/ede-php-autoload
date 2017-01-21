@@ -1,0 +1,34 @@
+#+TITLE: How to extend composer autoloading system
+
+* Introduction
+
+It is possible to extend the way ede-php-autoload generates autoloads
+for a composer project. This can be used to add specific autoload
+system for some special frameworks.
+
+* Example
+
+The core composer autoloads are generated using this system. See for
+example ~ede-php-autoload-composer--merge-composer-data-autoloads~ in
+~ede-php-autoload-composer.el~. It is in charge of generating
+autoloads for everything defined directly in the composer.json
+~autoloads~ entry.
+
+* How to define your own visitor
+
+A visitor is a function that takes the project context and the current
+autoloads as parameters, appends its autoloads to the current ones,
+and returns this new autoloads definition. Here is an example of a
+visitor that always adds the same PSR-4 autoload with the namespace
+~MyCustomNs~:
+
+#+BEGIN_SRC emacs-lisp
+  (defun add-my-class-autoloads (context autoloads)
+    (ede-php-autoload-composer-merge-autoloads
+     autoloads
+     `(:psr-4 (("MyCustomNs" . ,(concat
+                                 (ede-php-autoload-composer-get-project-dir context)
+                                 "src/MyCustomNs"))))))
+
+  (ede-php-autoload-composer-define-visitor #'add-my-class-autoloads)
+#+END_SRC
