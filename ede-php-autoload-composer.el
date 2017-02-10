@@ -1,6 +1,6 @@
 ;;; ede-php-autoload-composer.el --- Composer projects detection and analysis -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015, Steven Rémot
+;; Copyright (C) 2015, 2017, Steven Rémot
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;; Keywords: PHP project ede
@@ -164,7 +164,7 @@ NEW-AUTOLOADS will be merged into BASE-AUTOLOADS.  BASE-AUTOLOADS will be mutate
 
     autoloads))
 
-(defun ede-php-autoload--merge-composer-autoloads (composer-data autoloads &optional base-dir)
+(defun ede-php-autoload-composer-merge-composer-autoloads (composer-data autoloads &optional base-dir)
   "Load the autoload information in COMPOSER-DATA and merge it with AUTOLOADS.
 
 COMPOSER-DATA is the parsed composer.json file.
@@ -249,7 +249,7 @@ Returns the new list of autoloads."
 
 CONTEXT is the composer context.
 AUTOLOADS is the current list of autoloads."
-  (ede-php-autoload--merge-composer-autoloads (ede-php-autoload-composer-get-composer-data context) autoloads nil))
+  (ede-php-autoload-composer-merge-composer-autoloads (ede-php-autoload-composer-get-composer-data context) autoloads nil))
 
 (ede-php-autoload-composer-define-visitor #'ede-php-autoload-composer--merge-composer-data-autoloads)
 
@@ -267,7 +267,7 @@ AUTOLOADS is the current list of autoloads."
          current-data)
     (while (< i l)
       (setq current-data (aref third-party-data i)
-            autoloads (ede-php-autoload--merge-composer-autoloads
+            autoloads (ede-php-autoload-composer-merge-composer-autoloads
                        current-data
                        autoloads
                        (ede-php-autoload-composer--get-third-party-dir current-data vendor-dir))
