@@ -6,4 +6,5 @@
 
 (development
  (depends-on "ecukes")
+ (depends-on "ert-runner")
  (depends-on "f"))
