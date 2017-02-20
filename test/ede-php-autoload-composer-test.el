@@ -35,10 +35,22 @@
             '(:psr-0 (("Test" . "test/")) :psr-4 (("Test3" . "test3/")))
             '(:psr-0 (("Test2" . "test2/")) :psr-4 (("Test4" . "test4/"))))
 
-           '(:psr-0 (("Test" . "test/")
-                     ("Test2" . "test2/"))
-             :psr-4 (("Test3" . "test3/")
-                     ("Test4" . "test4/"))))))
+           '(:psr-0 (("Test2" . "test2/")
+                     ("Test" . "test/"))
+             :psr-4 (("Test4" . "test4/")
+                     ("Test3" . "test3/"))))))
+
+(ert-deftest ede-php-autoload-composer-merge-autoloads-concats-files-merged-part ()
+  "`ede-php-autoload-composer-merge-autoloads' should merge paths with the same key."
+  (should (equal
+
+           (ede-php-autoload-composer-merge-autoloads
+            '(:psr-0 (("Test" . "test/")) :psr-4 (("Test3" . "test3/")))
+            '(:psr-0 (("Test" . "test2/")) :psr-4 (("Test4" . "test4/"))))
+
+           '(:psr-0 (("Test" .  ("test/" "test2/")))
+             :psr-4 (("Test4" . "test4/")
+                     ("Test3" . "test3/"))))))
 
 (ert-deftest ede-php-autoload-composer-define-visitor ()
   "`:define-visitors' should define a visitor according to its step."

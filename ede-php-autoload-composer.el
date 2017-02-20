@@ -138,6 +138,31 @@ BASE-DIR is the prefix dir to add to each autoload path."
 
     autoloads))
 
+(defun ede-php-autoload-composer--merge-autoload-paths (base-paths new-paths)
+  "Merge two paths in a autoload file in one.
+
+BASE-PATHS and NEW-PATHS are either string opr list of strings.
+
+It will output a list of strings with each of base and new paths in it."
+  (let ((list-base-path (if (stringp base-paths) (list base-paths) base-paths))
+        (list-new-paths (if (stringp new-paths) (list new-paths) new-paths)))
+    (append list-base-path list-new-paths)))
+
+(defun ede-php-autoload-composer--merge-autoload-entries (base-entries new-entries)
+  "Merge two autoload entries (right after the autoload entry).
+
+BASE-ENTRIES and NEW-ENTRIES are the entries to merge."
+  (let ((current-entries base-entries)
+        pair
+        pair-path)
+    (cl-loop for (ns . paths) in new-entries do
+             (setq pair (assoc ns current-entries)
+                   pair-path (cdr pair))
+             (if pair
+                 (setf (cdr pair) (ede-php-autoload-composer--merge-autoload-paths pair-path paths))
+               (setq current-entries (push (cons ns paths) current-entries))))
+    current-entries))
+
 (defun ede-php-autoload-composer-merge-autoloads (base-autoloads new-autoloads)
   "Merge two internal autoload definitions in one.
 
@@ -156,7 +181,7 @@ NEW-AUTOLOADS will be merged into BASE-AUTOLOADS.  BASE-AUTOLOADS will be mutate
 
             autoloads (plist-put autoloads
                                  key
-                                 (append
+                                 (ede-php-autoload-composer--merge-autoload-entries
                                   (plist-get autoloads key)
                                   value))
 
