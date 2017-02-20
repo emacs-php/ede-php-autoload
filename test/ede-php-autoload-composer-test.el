@@ -40,6 +40,44 @@
              :psr-4 (("Test3" . "test3/")
                      ("Test4" . "test4/"))))))
 
+(ert-deftest ede-php-autoload-composer-define-visitor ()
+  "`:define-visitors' should define a visitor according to its step."
+  (setq ede-php-autoload-composer--visitors '())
+
+  (ede-php-autoload-composer-define-visitor 'test-visitor-1)
+  (should (equal ede-php-autoload-composer--visitors '((:normal . (test-visitor-1)))))
+
+  (ede-php-autoload-composer-define-visitor 'test-visitor-2 :late)
+  (should (equal ede-php-autoload-composer--visitors '((:late . (test-visitor-2))
+                              (:normal . (test-visitor-1)))))
+
+
+  (ede-php-autoload-composer-define-visitor 'test-visitor-3 :early)
+  (should (equal ede-php-autoload-composer--visitors '((:early . (test-visitor-3))
+                              (:late . (test-visitor-2))
+                              (:normal . (test-visitor-1)))))
+
+
+  (ede-php-autoload-composer-define-visitor 'test-visitor-4)
+  (should (equal ede-php-autoload-composer--visitors '((:early . (test-visitor-3))
+                              (:late . (test-visitor-2))
+                              (:normal . (test-visitor-4 test-visitor-1))))))
+
+(ert-deftest ede-php-autoload-composer--run-visitors ()
+  "`ede-php-autoload-composer--run-visitors' should build configuration from visitors."
+  (should (equal
+           (ede-php-autoload-composer--run-visitors
+            '((:late . ((lambda (context autoloads)
+                          (push :late autoloads))))
+              (:early . ((lambda (context autoloads)
+                           (push :early autoloads))))
+              (:normal . ((lambda (context autoloads)
+                          (push :normal autoloads)))))
+            nil
+            '())
+
+           '(:late :normal :early))))
+
 (provide 'ede-php-autoload-composer-test)
 
 ;;; ede-php-autoload-composer-test.el ends here

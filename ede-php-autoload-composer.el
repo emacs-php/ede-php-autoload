@@ -223,23 +223,36 @@ PROJECT-DIR is the absolute path of the project directory."
   "Return the absolute path to the project directory in the given CONTEXT."
   (cdr (assoc 'project-dir context)))
 
-(defun ede-php-autoload-composer-define-visitor (visitor)
+(defun ede-php-autoload-composer-define-visitor (visitor &optional step)
   "Add a new VISITOR to the list of composer visitors.
 
 A visitor is a function that takes a context and the current list
 of autoloads, and returns a new list of autoloads.
 
 All visitors are executed when a composer project is detected, to
-generate the composer autoloads."
-  (add-to-list 'ede-php-autoload-composer--visitors visitor))
+generate the composer autoloads.
 
-(defun ede-php-autoload-composer--run-visitors (context autoloads)
+STEP is the autoload construction step at which the visitor
+should execute.  It can be `:early', `:normal' or `:late.  It
+defaults to `:normal'.'"
+  (let* ((real-step (or step :normal))
+         (pair (assoc real-step ede-php-autoload-composer--visitors)))
+    (if pair
+        (setf (cdr pair) (push  visitor (cdr pair)))
+      (add-to-list 'ede-php-autoload-composer--visitors (cons real-step (list visitor))))))
+
+(defun ede-php-autoload-composer--run-visitors (visitors context autoloads)
   "Run all the visitors on a specified CONTEXT, with the initial AUTOLOADS.
 
 Returns the new list of autoloads."
-  (let ((current-autoloads autoloads))
-    (dolist (visitor ede-php-autoload-composer--visitors)
-      (setq current-autoloads (funcall visitor context current-autoloads)))
+  (let ((current-autoloads autoloads)
+        step-visitors)
+
+    (dolist (step '(:early :normal :late))
+      (setq step-visitors (cdr (assoc step visitors)))
+      (dolist (visitor step-visitors)
+        (setq current-autoloads (funcall visitor context current-autoloads))))
+
     current-autoloads))
 
 ;; Basic visitors ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -287,7 +300,7 @@ information into AUTOLOADS."
          (lock-file (expand-file-name ede-php-autoload-composer-lock-file project-dir))
          (composer-lock (when (file-exists-p lock-file) (json-read-file lock-file)))
          (context (ede-php-autoload-composer-make-context composer-data composer-lock project-dir)))
-    (ede-php-autoload-composer--run-visitors context autoloads)))
+    (ede-php-autoload-composer--run-visitors ede-php-autoload-composer--visitors context autoloads)))
 
 
 (provide 'ede-php-autoload-composer)
