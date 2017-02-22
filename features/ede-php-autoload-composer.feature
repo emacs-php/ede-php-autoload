@@ -20,8 +20,8 @@ Feature: Composer EDE project creation
 
   Scenario: Load a PSR-4 multi-directory namespace
     Given I visit "src/main.php" in project "with-composer"
-    Then the class "MultiDirNs\\TheClass1" should be detected in "src/MultiDirNs1/TheClass1.php"
-    And the class "MultiDirNs\\TheClass2" should be detected in "src/MultiDirNs2/TheClass2.php"
+    Then the class "MultiDirNs\TheClass1" should be detected in "src/MultiDirNs1/TheClass1.php"
+    And the class "MultiDirNs\TheClass2" should be detected in "src/MultiDirNs2/TheClass2.php"
 
   Scenario: Load a PSR-4 class using fallback
     Given I visit "src/main.php" in project "with-composer"
