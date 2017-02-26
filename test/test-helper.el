@@ -33,6 +33,4 @@
 (require 'ert)
 (require 'ede-php-autoload)
 
-(provide 'test-helper)
-
 ;;; test-helper.el ends here
