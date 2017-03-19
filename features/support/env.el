@@ -34,7 +34,10 @@
 (load (f-join ede-php-autoload-root-path "ede-php-autoload-autoloads.el"))
 
 (Setup
- (global-ede-mode 1)
+ (global-ede-mode 1))
+
+(Before
+ (setq ede-projects nil)
  ;; Define projects
  ;; The composer projet is auto-detected
  (ede-php-autoload-project "Without composer"
@@ -49,5 +52,4 @@
                                                              ("Psr4Split\\Ns2" . "src/Psr4Split/Ns2"))
                                                      :class-map ((ClassMapNs\\MyClass . "src/ClassMapNs/MyClass.php")))
                            :include-path '(".")
-                           :system-include-path '("/usr/share/php"))
- )
+                           :system-include-path '("/usr/share/php")))
