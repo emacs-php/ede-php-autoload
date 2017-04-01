@@ -66,14 +66,22 @@ DIR is the directory to search from."
   (let ((proj (ede-php-autoload-file-existing dir)))
     (when proj (oref proj file))))
 
+(defun ede-php-autoload--proj-root (file)
+  "Recursively detect project root.
+
+Return the top-most parent directory of FILE containing a composer.json file."
+  (let* ((dominating-file (locate-dominating-file file ede-php-autoload-composer-file))
+         potential-proj-root)
+    (when dominating-file
+      (setq potential-proj-root (file-name-directory dominating-file))
+      (or (ede-php-autoload--proj-root (file-name-directory (directory-file-name potential-proj-root))) potential-proj-root))))
+
 ;;;###autoload
 (defun ede-php-autoload-proj-root ()
   "Auto-detect composer project root.
 
 Return the parent directory of the current buffer file that contains a composer.json file."
-  (let ((dominating-file (locate-dominating-file (or (buffer-file-name) default-directory) ede-php-autoload-composer-file)))
-    (when dominating-file
-      (file-name-directory dominating-file))))
+  (ede-php-autoload--proj-root (or (buffer-file-name) default-directory)))
 
 ;; Composer project detection
 
@@ -85,7 +93,7 @@ DIR is the project directory.
 
 ROOTPROJ is the parent project.  The PHP autoload project is not
 intended to be a subproject, so this argument is ignored."
-  (let* ((truedir (file-truename dir))
+  (let* ((truedir (ede-php-autoload--proj-root (file-truename dir)))
          (name (concat "PHP Autoload: " truedir)))
     (ede-php-autoload-project name
                               :name name

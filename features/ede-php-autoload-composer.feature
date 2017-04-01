@@ -46,3 +46,7 @@ Feature: Composer EDE project creation
   Scenario: Load a composer dev dependency class
     Given I visit "src/main.php" in project "with-composer"
     Then the class "DevDependency\TestClass" should be detected in "vendor/third-party/dev-dependency/src/TestClass.php"
+
+  Scenario: Visit a vendor file
+    Given I visit "vendor/third-party/third-party/src/ThirdClass.php" in project "with-composer"
+    Then the class "Psr0Ns_TheClass" should be detected in "src/Psr0Ns/TheClass.php"
