@@ -28,6 +28,19 @@
      (or (buffer-file-name) default-directory)
      ede-php-autoload-test-projects-root-path))))
 
+(defun ede-php-autoload-test-set-composer (composer-file-name)
+  "Set the composer file of the project with-composer.
+
+COMPOSER-FILE-NAME is either default or new."
+  (let* ((project-root (f-join ede-php-autoload-test-projects-root-path "with-composer"))
+         (destination (f-join project-root "composer.json")))
+
+    (when (f-exists? destination)
+      (f-delete destination))
+
+    (f-copy (f-join project-root (format "%s-composer.json" composer-file-name))
+            destination)))
+
 (add-to-list 'load-path ede-php-autoload-root-path)
 
 (package-generate-autoloads "ede-php-autoload" ede-php-autoload-root-path)
@@ -38,6 +51,9 @@
 
 (Before
  (setq ede-projects nil)
+
+ (ede-php-autoload-test-set-composer "default")
+
  ;; Define projects
  ;; The composer projet is auto-detected
  (ede-php-autoload-project "Without composer"

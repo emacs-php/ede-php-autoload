@@ -50,3 +50,10 @@ Feature: Composer EDE project creation
   Scenario: Visit a vendor file
     Given I visit "vendor/third-party/third-party/src/ThirdClass.php" in project "with-composer"
     Then the class "Psr0Ns_TheClass" should be detected in "src/Psr0Ns/TheClass.php"
+
+  Scenario: Update the autoloads
+    Given I visit "src/main.php" in project "with-composer"
+    Then the class "NewNs\MyClass" should not be detected
+    Given I update the composer file
+    And I refresh the project autoloads
+    Then the class "NewNs\MyClass" should be detected in "src/NewNs/MyClass.php"

@@ -49,6 +49,12 @@
     (add-hook 'php-mode-hook #'ede-php-autoload-mode)
   #+END_SRC
 
+* Commands
+
+  | Name                                    | Description                                                    |
+  |-----------------------------------------+----------------------------------------------------------------|
+  | ~M-x ede-php-autoload-reload-autoloads~ | Similar to the reindexation in IDEs. Use it when your composer configuration changed to reload the autoloads. |
+
 * License
 
   This project is released under the GPL v3 license. See =GPL= for details.

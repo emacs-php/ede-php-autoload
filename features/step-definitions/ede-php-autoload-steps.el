@@ -3,6 +3,14 @@
     (find-file (ede-php-autoload-test-get-project-file-path file-path project-name))
     ))
 
+(Given "^I update the composer file"
+       (lambda ()
+         (ede-php-autoload-test-set-composer "new")))
+
+(Given "^I refresh the project autoloads"
+       (lambda ()
+         (call-interactively #'ede-php-autoload-reload-autoloads)))
+
 (Then "^ede-php-autoload-project should exist$"
       (lambda ()
         (should (ede-php-autoload-project-p (ede-current-project)))))

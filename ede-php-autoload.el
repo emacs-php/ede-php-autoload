@@ -115,6 +115,16 @@ intended to be a subproject, so this argument is ignored."
                            :safe-p t)
      'unique))
 
+(defun ede-php-autoload-reload-autoloads ()
+  "Reload the autoloads for the current projects.
+
+This has the same goal than a reindexation in IDEs.  Use this
+method when your composer.json file changed, or your vendor
+directory has been updated in order to take the new autoloads
+into account."
+  (interactive)
+  (ede-php-autoload-reload-autoloads-for-project (ede-current-project)))
+
 ;;;;
 ;;;; Class loaders
 ;;;;
@@ -147,8 +157,7 @@ to the associated directories."
 ;;;###autoload
 (defclass ede-php-autoload-project (ede-project eieio-instance-tracker)
   ((tracking-symbol :initform 'ede-php-autoload-project-list)
-   (class-loader :initarg :class-loader
-                 :type ede-php-autoload-class-loader
+   (class-loader :type ede-php-autoload-class-loader
                  :documentation "The project's class loader.")
    (include-path :initarg :include-path
                  :type list
@@ -157,21 +166,21 @@ to the associated directories."
    (system-include-path :initarg :system-include-path
                         :type list
                         :initform ()
-                        :documentation "The list of PHP include paths defined for the system.")))
+                        :documentation "The list of PHP include paths defined for the system.")
+   (explicit-class-autoloads :initarg :explicit-class-autoloads
+                             :type list
+                             :documentation "The class autoloads explicitly defined at initialization")))
 
 (defmethod initialize-instance ((this ede-php-autoload-project) &rest fields)
   "Make sure the :file is fully expanded."
-  (let ((class-autoloads (plist-get (car fields) :class-autoloads)))
+  (call-next-method this (list
+                          :file (plist-get (car fields) :file)
+                          :explicit-class-autoloads (plist-get (car fields) :class-autoloads)
+                          :include-path (plist-get (car fields) :include-path)
+                          :system-include-path (plist-get (car fields) :system-include-path)))
 
-    (setq class-autoloads (ede-php-autoload--append-composer-autoload-data
-                           (file-name-directory (plist-get (car fields) :file))
-                           class-autoloads))
+  (ede-php-autoload-reload-autoloads-for-project this)
 
-    (call-next-method this (list
-                            :file (plist-get (car fields) :file)
-                            :class-loader (ede-php-autoload-create-class-loader class-autoloads)
-                            :include-path (plist-get (car fields) :include-path)
-                            :system-include-path (plist-get (car fields) :system-include-path))))
   (let ((f (expand-file-name (oref this file))))
     ;; Remove any previous entries from the main list.
     (let ((old (eieio-instance-tracker-find (file-name-directory f)
@@ -190,6 +199,18 @@ to the associated directories."
     (ede-add-project-to-global-list this)
     (unless (slot-boundp this 'targets)
       (oset this :targets nil))))
+
+(defmethod ede-php-autoload-reload-autoloads-for-project ((this ede-php-autoload-project))
+  "Regenerate the class loaders.
+
+This can be used when some composer dependencies changed, to take
+the new autoloads into account."
+  (oset this class-loader
+        (ede-php-autoload-create-class-loader
+         (ede-php-autoload--append-composer-autoload-data
+          (file-name-directory (ede-project-root-directory this))
+          (oref this explicit-class-autoloads))
+         )))
 
 (defmethod ede-find-subproject-for-directory ((proj ede-php-autoload-project) dir)
   "Return PROJ, for handling all subdirs below DIR."
