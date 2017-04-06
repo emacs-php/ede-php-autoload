@@ -47,3 +47,7 @@
       (lambda (query suggestion-table)
         (should (equal (ede-php-autoload-complete-type-name (ede-current-project) query)
                        (car suggestion-table)))))
+
+(Then "^completions for query \"\\(.+\\)\" should be nil"
+      (lambda (query)
+        (should (null (ede-php-autoload-complete-type-name (ede-current-project) query)))))
