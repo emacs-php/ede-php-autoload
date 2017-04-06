@@ -1,3 +1,10 @@
+# Next
+
+Features:
+- Automatically remove autoloads leading to non-existing dir
+
+Fixes:
+
 # 1.1.0
 
 Features:

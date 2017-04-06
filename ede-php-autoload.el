@@ -146,7 +146,52 @@ to the associated directories."
         (add-to-list 'loaders (ede-php-autoload-class-loader-call-factory key (cadr load-config)))
         (setq load-config (cddr load-config))))
     (ede-php-autoload-aggregate-class-loader "Aggregate loader"
-                                         :class-loaders loaders)))
+                             :class-loaders loaders)))
+
+(defun ede-php-autoload-remove-non-existing-dirs (conf root-dir)
+  "Remove from CONF the non-existing directories.
+
+CONF is the same kind of argument than `ede-php-autoload-create-class-loader'.
+
+ROOT-DIR is the root directory of the project."
+  (let ((cleaned-conf '())
+        (conf-length (length conf))
+        (index 0)
+        key
+        namespaces cleaned-namespaces
+        namespace
+        paths cleaned-paths)
+
+    ;; key: `:psr-0', ...
+    (while (< index conf-length)
+      (setq key (nth index conf)
+            namespaces (nth (1+ index) conf)
+            cleaned-namespaces '())
+
+      ;; pair: (ns . paths)
+      (dolist (pair namespaces)
+        (setq namespace (car pair)
+              paths (if (listp (cdr pair)) (cdr pair) (list (cdr pair)))
+              cleaned-paths '())
+
+        (dolist (path paths)
+          (when (file-exists-p (expand-file-name path root-dir))
+            (add-to-list 'cleaned-paths path t)))
+
+        (when (> (length cleaned-paths) 0)
+          (add-to-list 'cleaned-namespaces
+                       (cons
+                        namespace
+                        (if (= (length cleaned-paths) 1)
+                            (car cleaned-paths)
+                          cleaned-paths))
+                       t)))
+
+      (when (> (length cleaned-namespaces) 0)
+        (setq cleaned-conf (append cleaned-conf (list key cleaned-namespaces))))
+
+      (setq index (+ index 2)))
+    cleaned-conf))
 
 
 (defclass ede-php-autoload-target (ede-target)
@@ -205,12 +250,15 @@ to the associated directories."
 
 This can be used when some composer dependencies changed, to take
 the new autoloads into account."
-  (oset this class-loader
-        (ede-php-autoload-create-class-loader
-         (ede-php-autoload--append-composer-autoload-data
-          (file-name-directory (ede-project-root-directory this))
-          (oref this explicit-class-autoloads))
-         )))
+  (let* ((raw-autoloads
+          (ede-php-autoload--append-composer-autoload-data
+           (file-name-directory (ede-project-root-directory this))
+           (oref this explicit-class-autoloads)))
+         (root-dir (ede-project-root-directory this))
+         (cleaned-autoloads (ede-php-autoload-remove-non-existing-dirs raw-autoloads root-dir)))
+
+    (oset this class-loader
+          (ede-php-autoload-create-class-loader cleaned-autoloads))))
 
 (defmethod ede-find-subproject-for-directory ((proj ede-php-autoload-project) dir)
   "Return PROJ, for handling all subdirs below DIR."

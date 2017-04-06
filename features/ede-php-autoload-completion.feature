@@ -31,3 +31,7 @@ Feature: Class name completion
     Given I visit "src/main.php" in project "without-composer"
     Then completions for query "ClassMapNs\" should be:
       | ClassMapNs\MyClass |
+
+  Scenario: Complete non-existing dir
+    Given I visit "src/main.php" in project "without-composer"
+    Then completions for query "NonExisting\" should be nil

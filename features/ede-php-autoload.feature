@@ -48,6 +48,6 @@ Feature: Hand-made EDE project creation
     THen guessing the class name for "src/ClassMapNs/MyClass.php" should return "ClassMapNs\MyClass"
 
 
-  Scenario: Load a class the doesn't exist
+  Scenario: Load a class that doesn't exist
     Given I visit "src/main.php" in project "without-composer"
     Then the class "Psr4Ns\DoesNotExist" should not be detected
