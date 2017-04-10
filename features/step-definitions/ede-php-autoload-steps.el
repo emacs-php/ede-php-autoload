@@ -45,8 +45,10 @@
 
 (Then "^completions for query \"\\(.+\\)\" should be:"
       (lambda (query suggestion-table)
-        (should (equal (ede-php-autoload-complete-type-name (ede-current-project) query)
-                       (car suggestion-table)))))
+        (let ((suggestions (cl-loop for suggestion in (cdr suggestion-table)
+                                    collect (car suggestion))))
+          (should (equal (ede-php-autoload-complete-type-name (ede-current-project) query)
+                         suggestions)))))
 
 (Then "^completions for query \"\\(.+\\)\" should be nil"
       (lambda (query)
