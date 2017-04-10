@@ -98,7 +98,9 @@ Basically, it returns PROJECT-ROOT/{NS-DIRECTORIES}/RELATIVE-PATH/{PREFIX}*"
               files (append files (directory-files
                                    full-dir
                                    nil
-                                   (concat "^" (regexp-quote prefix))))))
+                                   (concat "^" (if (string= prefix "")
+                                                   "[^.]"
+                                                   (regexp-quote prefix)))))))
     files))
 
 (defun ede-php-autoload--ensure-list (list-or-element)
