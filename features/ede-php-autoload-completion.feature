@@ -7,6 +7,7 @@ Feature: Class name completion
       | Psr0Ns        |
       | Psr0Split\Ns1 |
       | Psr0Split\Ns2 |
+      | Psr0Fallback  |
 
   Scenario: Complete PSR-0 namespace with slashes
     Given I visit "src/main.php" in project "without-composer"
@@ -37,6 +38,7 @@ Feature: Class name completion
       | Psr4Ns        |
       | Psr4Split\Ns1 |
       | Psr4Split\Ns2 |
+      | Psr4Fallback  |
     And completions for query "Psr4Ns\T" should be:
       | name      |
       | TheClass  |
