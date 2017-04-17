@@ -96,12 +96,18 @@ Basically, it returns PROJECT-ROOT/{NS-DIRECTORIES}/RELATIVE-PATH/{PREFIX}*"
                              (expand-file-name dir project-root))
               full-dir (expand-file-name relative-path absolute-dir)
               files (when (file-exists-p full-dir)
-                      (append files (directory-files
-                                     full-dir
-                                     nil
-                                     (concat "^" (if (string= prefix "")
-                                                     "[^.]"
-                                                   (regexp-quote prefix))))))))
+                      (append files (mapcar
+                                     #'(lambda (file-name)
+                                         (if (file-directory-p
+                                              (expand-file-name file-name full-dir))
+                                             (concat file-name "\\")
+                                           file-name))
+                                     (directory-files
+                                      full-dir
+                                      nil
+                                      (concat "^" (if (string= prefix "")
+                                                      "[^.]"
+                                                    (regexp-quote prefix)))))))))
     files))
 
 (defun ede-php-autoload--ensure-list (list-or-element)
