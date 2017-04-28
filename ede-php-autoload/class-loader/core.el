@@ -45,13 +45,34 @@ Generate this class name using the class loader information.
 FILE-NAME must be absolute or relative to the project root."
   (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-class-loader) prefix)
-  "Get completion suggestions for the type PREFIX.
+(defmethod ede-php-autoload-complete ((this ede-php-autoload-class-loader) prefix)
+  "Get completion suggestions for the PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.
 
 The result is a list of completion suggestions for this
-prefix. Completions are not guaranteed to give full class names,
+prefix."
+  (let* ((split-prefix (split-string prefix "\\\\"))
+         (ns (mapconcat 'identity (butlast split-prefix) "\\"))
+         (completions (ede-php-autoload-complete-type-name this prefix)))
+    ;; Try to detect if we got toplevel namespace returned (which can
+    ;; contain multiple components), in which case we should not
+    ;; prepend the base namespace. This is error prone, and just a
+    ;; stop gap until ede-php-autoload-complete-type-name handles
+    ;; namespace sub-completion.
+    (if (cl-loop for completion in completions
+                 always (string-prefix-p prefix completion t))
+        completions
+      (cl-loop for completion in completions
+               collect (concat ns "\\" completion)))))
+
+(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-class-loader) prefix)
+  "Get type completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of type completion suggestions for this
+prefix. Type completions are not guaranteed to give full class names,
 this can only suggest the next namespace."
   '())
 
@@ -95,10 +116,19 @@ Basically, it returns PROJECT-ROOT/{NS-DIRECTORIES}/RELATIVE-PATH/{PREFIX}*"
                                dir
                              (expand-file-name dir project-root))
               full-dir (expand-file-name relative-path absolute-dir)
-              files (append files (directory-files
-                                   full-dir
-                                   nil
-                                   (concat "^" (regexp-quote prefix))))))
+              files (when (file-exists-p full-dir)
+                      (append files (mapcar
+                                     #'(lambda (file-name)
+                                         (if (file-directory-p
+                                              (expand-file-name file-name full-dir))
+                                             (concat file-name "\\")
+                                           file-name))
+                                     (directory-files
+                                      full-dir
+                                      nil
+                                      (concat "^" (if (string= prefix "")
+                                                      "[^.]"
+                                                    (regexp-quote prefix)))))))))
     files))
 
 (defun ede-php-autoload--ensure-list (list-or-element)

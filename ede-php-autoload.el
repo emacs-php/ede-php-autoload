@@ -303,6 +303,15 @@ Generate this class name using the class loader information.
 FILE-NAME must be absolute or relative to the project root."
   (ede-php-autoload-get-class-name-for-file (oref this class-loader) file-name))
 
+(defmethod ede-php-autoload-complete ((this ede-php-autoload-project) prefix)
+  "Get completion suggestions for the type PREFIX.
+
+PREFIX is the beginning of a fully-qualified name.
+
+The result is a list of completion suggestions for this
+prefix."
+  (ede-php-autoload-complete (oref this class-loader) prefix))
+
 (defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-project) prefix)
   "Get completion suggestions for the type PREFIX.
 

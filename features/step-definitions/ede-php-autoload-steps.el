@@ -43,11 +43,24 @@
                           file-name)
                          class-name))))
 
-(Then "^completions for query \"\\(.+\\)\" should be:"
+(Then "^type completions for query \"\\(.+\\)\" should be:"
       (lambda (query suggestion-table)
-        (should (equal (ede-php-autoload-complete-type-name (ede-current-project) query)
-                       (car suggestion-table)))))
+        (let ((suggestions (cl-loop for suggestion in (cdr suggestion-table)
+                                    collect (car suggestion))))
+          (should (equal (ede-php-autoload-complete-type-name (ede-current-project) query)
+                         suggestions)))))
 
-(Then "^completions for query \"\\(.+\\)\" should be nil"
+(Then "^type completions for query \"\\(.+\\)\" should be nil"
       (lambda (query)
         (should (null (ede-php-autoload-complete-type-name (ede-current-project) query)))))
+
+(Then "^completions for query \"\\(.+\\)\" should be:"
+  (lambda (query suggestion-table)
+    (let ((suggestions (cl-loop for suggestion in (cdr suggestion-table)
+                                collect (car suggestion))))
+      (should (equal (ede-php-autoload-complete (ede-current-project) query)
+                     suggestions)))))
+
+(Then "^completions for query \"\\(.+\\)\" should be nil"
+  (lambda (query)
+    (should (null (ede-php-autoload-complete (ede-current-project) query)))))

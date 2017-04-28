@@ -133,8 +133,8 @@ PREFIX is the beginning of the type to complete."
     (cond
      ((string-prefix-p prefix namespace t)
       ;; If `prefix' is the beginning of `namespace', let's use
-      ;; `namespace' as suggestion
-      (push namespace suggestions))
+      ;; `namespace' as suggestion.
+      (push (concat namespace "\\") suggestions))
      ((string-prefix-p namespace prefix)
       ;; If `prefix' starts with `namespace', let's use directory and
       ;; file structure to create suggestions
