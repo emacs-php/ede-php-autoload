@@ -1,6 +1,6 @@
 #+TITLE: ede-php-autoload
 
-[[http://melpa.org/#/ede-php-autoload][file:http://melpa.org/packages/ede-php-autoload-badge.svg]] [[http://stable.melpa.org/#/ede-php-autoload][file:http://stable.melpa.org/packages/ede-php-autoload-badge.svg]] [[https://travis-ci.org/stevenremot/ede-php-autoload][file:https://travis-ci.org/stevenremot/ede-php-autoload.svg]]
+[[http://melpa.org/#/ede-php-autoload][file:http://melpa.org/packages/ede-php-autoload-badge.svg]] [[http://stable.melpa.org/#/ede-php-autoload][file:http://stable.melpa.org/packages/ede-php-autoload-badge.svg]] [[https://travis-ci.org/emacs-php/ede-php-autoload][file:https://travis-ci.org/emacs-php/ede-php-autoload.svg]]
 
 * Description
 

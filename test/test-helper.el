@@ -6,7 +6,7 @@
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;; Keywords: PHP project ede
-;; Homepage: https://github.com/stevenremot/ede-php-autoload
+;; Homepage: https://github.com/emacs-php/ede-php-autoload
 
 ;; This file is not part of GNU Emacs.
 
