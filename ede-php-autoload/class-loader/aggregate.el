@@ -32,7 +32,7 @@
 They must be instances of `ede-php-autoload-class-loader'."))
   "An aggregation of several class loaders.")
 
-(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-aggregate-class-loader)
+(cl-defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-aggregate-class-loader)
                                              class-name)
   "Find the file in which CLASS-NAME is defined.
 
@@ -44,7 +44,7 @@ Return nil if no file has been found."
             loaders (cdr loaders)))
     class-def-file))
 
-(defmethod ede-php-autoload-get-class-name-for-file
+(cl-defmethod ede-php-autoload-get-class-name-for-file
   ((this ede-php-autoload-aggregate-class-loader) file-name)
   "Generate a suitable class name for the current FILE-NAME.
 
@@ -58,7 +58,7 @@ FILE-NAME must be absolute or relative to the project root."
             loaders (cdr loaders)))
     class-name))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-aggregate-class-loader) prefix)
+(cl-defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-aggregate-class-loader) prefix)
   "Get completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.

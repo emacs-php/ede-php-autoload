@@ -217,7 +217,7 @@ ROOT-DIR is the root directory of the project."
                              :type list
                              :documentation "The class autoloads explicitly defined at initialization")))
 
-(defmethod initialize-instance ((this ede-php-autoload-project) &rest fields)
+(cl-defmethod initialize-instance ((this ede-php-autoload-project) &rest fields)
   "Make sure the :file is fully expanded."
   (call-next-method this (list
                           :file (plist-get (car fields) :file)
@@ -246,7 +246,7 @@ ROOT-DIR is the root directory of the project."
     (unless (slot-boundp this 'targets)
       (oset this :targets nil))))
 
-(defmethod ede-php-autoload-reload-autoloads-for-project ((this ede-php-autoload-project))
+(cl-defmethod ede-php-autoload-reload-autoloads-for-project ((this ede-php-autoload-project))
   "Regenerate the class loaders.
 
 This can be used when some composer dependencies changed, to take
@@ -261,11 +261,11 @@ the new autoloads into account."
     (oset this class-loader
           (ede-php-autoload-create-class-loader cleaned-autoloads))))
 
-(defmethod ede-find-subproject-for-directory ((proj ede-php-autoload-project) dir)
+(cl-defmethod ede-find-subproject-for-directory ((proj ede-php-autoload-project) dir)
   "Return PROJ, for handling all subdirs below DIR."
   proj)
 
-(defmethod ede-find-target ((proj ede-php-autoload-project) buffer)
+(cl-defmethod ede-find-target ((proj ede-php-autoload-project) buffer)
   "Find an EDE target in PROJ for BUFFER.
 If one doesn't exist, create a new one for this directory."
   (let* ((targets (oref proj targets))
@@ -281,21 +281,21 @@ If one doesn't exist, create a new one for this directory."
       (object-add-to-list proj :targets ans))
     ans))
 
-(defmethod ede-project-root ((this ede-php-autoload-project))
+(cl-defmethod ede-project-root ((this ede-php-autoload-project))
   "Return my root."
   this)
 
-(defmethod ede-project-root-directory ((this ede-php-autoload-project))
+(cl-defmethod ede-project-root-directory ((this ede-php-autoload-project))
   "Return my root."
   (file-name-directory (oref this file)))
 
-(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-project) class-name)
+(cl-defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-project) class-name)
   "Find the file in which CLASS-NAME is defined.
 
 CLASS-NAME must be the full name of the class, with all its parent namespaces."
   (ede-php-autoload-find-class-def-file (oref this class-loader) class-name))
 
-(defmethod ede-php-autoload-get-class-name-for-file
+(cl-defmethod ede-php-autoload-get-class-name-for-file
   ((this ede-php-autoload-project) file-name)
   "Generate a suitable class name for the current FILE-NAME.
 
@@ -304,7 +304,7 @@ Generate this class name using the class loader information.
 FILE-NAME must be absolute or relative to the project root."
   (ede-php-autoload-get-class-name-for-file (oref this class-loader) file-name))
 
-(defmethod ede-php-autoload-complete ((this ede-php-autoload-project) prefix)
+(cl-defmethod ede-php-autoload-complete ((this ede-php-autoload-project) prefix)
   "Get completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.
@@ -313,7 +313,7 @@ The result is a list of completion suggestions for this
 prefix."
   (ede-php-autoload-complete (oref this class-loader) prefix))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-project) prefix)
+(cl-defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-project) prefix)
   "Get completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.

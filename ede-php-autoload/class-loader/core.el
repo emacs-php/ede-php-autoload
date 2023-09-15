@@ -29,14 +29,14 @@
   "Base class for finding the file in with some class is defined."
   :abstract t)
 
-(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-class-loader)
+(cl-defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-class-loader)
                                              class-name)
   "Find the file in which CLASS-NAME is defined.
 
 CLASS-NAME must be the full name of the class, with all its parent namespaces."
   (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
-(defmethod ede-php-autoload-get-class-name-for-file
+(cl-defmethod ede-php-autoload-get-class-name-for-file
   ((this ede-php-autoload-class-loader) file-name)
   "Generate a suitable class name for the current FILE-NAME.
 
@@ -45,7 +45,7 @@ Generate this class name using the class loader information.
 FILE-NAME must be absolute or relative to the project root."
   (error "Method `ede-php-autoload-find-class-def-file' must be overriden"))
 
-(defmethod ede-php-autoload-complete ((this ede-php-autoload-class-loader) prefix)
+(cl-defmethod ede-php-autoload-complete ((this ede-php-autoload-class-loader) prefix)
   "Get completion suggestions for the PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.
@@ -66,7 +66,7 @@ prefix."
       (cl-loop for completion in completions
                collect (concat ns "\\" completion)))))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-class-loader) prefix)
+(cl-defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-class-loader) prefix)
   "Get type completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.
