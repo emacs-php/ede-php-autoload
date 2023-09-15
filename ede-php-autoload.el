@@ -4,6 +4,7 @@
 
 ;; Author: Steven Rémot <steven.remot@gmail.com>
 ;;         original code for C++ by Eric M. Ludlam <eric@siege-engine.com>
+;; Version: 1.1.0
 ;; Keywords: PHP project ede
 ;; Homepage: https://github.com/emacs-php/ede-php-autoload
 
