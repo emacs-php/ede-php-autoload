@@ -3,6 +3,7 @@
 *.info
 *.texi
 .cask
+.eask
 dist
 
 ede-php-autoload-autoloads.el

@@ -45,7 +45,7 @@ For example, if :namespaces has the value '((\"Foo\" . \"src/Foo\") (\"Bar\" . \
 then The class \"Bar\\Foo\" is considered to be defined in \"src/test/Bar/Foo\"."))
   "Class loader for PSR-4 convention.")
 
-(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-psr4-class-loader)
+(cl-defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-psr4-class-loader)
                                              class-name)
   "Find the file in which CLASS-NAME is defined.
 
@@ -88,7 +88,7 @@ TARGET is a string."
       (setq current-pairs (cdr current-pairs)))
     longest-pair))
 
-(defmethod ede-php-autoload-get-class-name-for-file
+(cl-defmethod ede-php-autoload-get-class-name-for-file
   ((this ede-php-autoload-psr4-class-loader) file-name)
   "Generate a suitable class name for the current FILE-NAME.
 
@@ -158,7 +158,7 @@ PREFIX is the beginning of the type to complete."
                                    (car (last split-prefix)))))))))
     suggestions))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-psr4-class-loader) prefix)
+(cl-defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-psr4-class-loader) prefix)
   "Get completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.

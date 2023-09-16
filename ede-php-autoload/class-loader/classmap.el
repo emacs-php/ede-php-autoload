@@ -40,7 +40,7 @@
                :documentation "A hash associating a class name and an absolute path to the file in whcih the class is defined."))
   "Class loader for direct association between classes and files.")
 
-(defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-classmap-class-loader) class-name)
+(cl-defmethod ede-php-autoload-find-class-def-file ((this ede-php-autoload-classmap-class-loader) class-name)
   "Find the file in which CLASS-NAME is defined.
 
 Return nil if no file has been found."
@@ -48,7 +48,7 @@ Return nil if no file has been found."
     (when file
       (expand-file-name file (ede-project-root-directory (ede-current-project))))))
 
-(defmethod ede-php-autoload-get-class-name-for-file ((this ede-php-autoload-classmap-class-loader) file-name)
+(cl-defmethod ede-php-autoload-get-class-name-for-file ((this ede-php-autoload-classmap-class-loader) file-name)
   "Generate a suitable class name for the current FILE-NAME.
 
 Generate this class name using the class loader information.
@@ -63,7 +63,7 @@ FILE-NAME must be absolute or relative to the project root."
              (throw 'class-name class)))
        (oref this class-hash)))))
 
-(defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-classmap-class-loader) prefix)
+(cl-defmethod ede-php-autoload-complete-type-name ((this ede-php-autoload-classmap-class-loader) prefix)
   "Get completion suggestions for the type PREFIX.
 
 PREFIX is the beginning of a fully-qualified name.
