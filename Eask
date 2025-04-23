@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "ede-php-autoload"
          "1.1.0"
          "PHP autoloading implementation for Semantic")
